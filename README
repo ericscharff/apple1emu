@@ -3,6 +3,11 @@ of a generic 6502 emulator, with front ends for Apple1, Apple 2, Apple ][ plus,
 and Apple //e.  Included are all the resources needed to run the emulator,
 as well as sample disks.
 
-Be sure to put the swt.jar in the lib directory
+Be sure to put the swt.jar in the lib directory:
+  cd lib
+  unzip ~/Downloads/swt-3.3-gtk-linux-x86.zip swt.jar
+  cd ..
+  ant run
+
 Usage:
   java -cp build/jars/apple2.jar:lib/swt.jar eric.Apple2e

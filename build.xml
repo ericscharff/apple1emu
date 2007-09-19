@@ -48,6 +48,7 @@
 	<pathelement location="${class.out.dir}"/>
 	<pathelement location="."/>
       </classpath>
+<!-- on mac:      <jvmarg value="-XstartOnFirstThread"/> -->
     </java>
   </target>
 </project>

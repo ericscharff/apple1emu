@@ -298,9 +298,10 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
         shiftDown = (event.stateMask & SWT.SHIFT) != 0;
         if (lastKey == '\n') lastKey = 0x0d;
         if (lastKey == 8) lastKey = 0x7f;
-        lastKey |= 0x80;
-        if ((lastKey < 0) || (lastKey > 0xff)) {
+        if ((lastKey <= 0) || (lastKey > 0xff)) {
           lastKey = 0;
+        } else {
+          lastKey |= 0x80;
         }
       }
     });

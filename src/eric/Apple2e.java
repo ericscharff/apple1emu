@@ -760,6 +760,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
 
   public void run() {
     int clock = 0;
+    long startTime = System.currentTimeMillis();
 
     if (isDisposed()) return;
     while (!cpu.halt && (clock < 10000)) {
@@ -773,7 +774,8 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
       System.exit(0);
     } else {
       redraw();
-      getDisplay().timerExec(100, this);
+      int napTime = Math.max(1, (int)(100 - System.currentTimeMillis() + startTime));
+      getDisplay().timerExec(napTime, this);
     }
   }
 

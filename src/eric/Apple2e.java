@@ -268,8 +268,6 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     Image image = new Image(d, 282, 192);
     hiresBuf = image.getImageData();
     image.dispose();
-//    System.out.println("w: " + hiresBuf.width + " h: " + hiresBuf.height +
-//        " depth: " + hiresBuf.depth + " scanlinePad: " + hiresBuf.scanlinePad);
     loresColor[0] = new Color(d, 0, 0, 0);
     loresColor[1] = new Color(d, 0xcc, 0, 0x33);
     loresColor[2] = new Color(d, 0, 0, 0x99);

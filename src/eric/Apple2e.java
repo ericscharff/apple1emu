@@ -10,7 +10,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -121,7 +120,6 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     }
   }
   
-  @Override
   public Point computeSize(int wHint, int hHint, boolean changed) {
     return new Point(280, 192);
   }
@@ -254,7 +252,6 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     auxLcMainBank = new int[8192];
     auxLcBank1 = new int[4096];
     auxLcBank2 = new int[4096];
-    hiresBuf = new ImageData(282, 192, 24, new PaletteData(0xff0000, 0xff00, 0xff));
     shouldSwitch = true;
     use80ColumnMapping = false;
     readAuxRam = false;
@@ -268,6 +265,11 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     resourceBundle = ResourceBundle.getBundle("resources.apple2");
     loresColor = new Color[16];
     Display d = getDisplay();
+    Image image = new Image(d, 282, 192);
+    hiresBuf = image.getImageData();
+    image.dispose();
+//    System.out.println("w: " + hiresBuf.width + " h: " + hiresBuf.height +
+//        " depth: " + hiresBuf.depth + " scanlinePad: " + hiresBuf.scanlinePad);
     loresColor[0] = new Color(d, 0, 0, 0);
     loresColor[1] = new Color(d, 0xcc, 0, 0x33);
     loresColor[2] = new Color(d, 0, 0, 0x99);

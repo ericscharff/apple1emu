@@ -11,3 +11,8 @@ Be sure to put the swt.jar in the lib directory:
 
 Usage:
   java -cp build/jars/apple2.jar:lib/swt.jar eric.Apple2e
+
+or just
+  java -jar build/jars/apple2.jar
+
+if swt.jar is already in your CLASSPATH

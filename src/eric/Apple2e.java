@@ -9,6 +9,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -66,6 +68,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   private Image charAltRom;
   private Image charRomInverse;
   private Image charRomFlash;
+  private ImageData hiresBuf;
   private Color[] loresColor;
   private int screenMode;
   private ResourceBundle resourceBundle;
@@ -118,6 +121,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     }
   }
   
+  @Override
   public Point computeSize(int wHint, int hHint, boolean changed) {
     return new Point(280, 192);
   }
@@ -250,6 +254,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     auxLcMainBank = new int[8192];
     auxLcBank1 = new int[4096];
     auxLcBank2 = new int[4096];
+    hiresBuf = new ImageData(282, 192, 24, new PaletteData(0xff0000, 0xff00, 0xff));
     shouldSwitch = true;
     use80ColumnMapping = false;
     readAuxRam = false;
@@ -928,20 +933,20 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
                     }
                   }
                 }
-//                hiresBuf.setRGB(x+1, y, k);
-//                hiresBuf.setRGB(x, y, k);
+                hiresBuf.setPixel(x+1, y, k);
+                hiresBuf.setPixel(x, y, k);
                 lastBitSet = true;
               } else {
                 if (!lastBitSet) {
-//                  hiresBuf.setRGB(x, y, 0xff000000);
+                  hiresBuf.setPixel(x, y, 0xff000000);
                 }
                 lastBitSet = false;
               }
             } else {
               if ((curByte & 0x1) != 0) {
-//                hiresBuf.setRGB(x, y, 0xffffffff);
+                hiresBuf.setPixel(x, y, 0xffffffff);
               } else {
-//                hiresBuf.setRGB(x, y, 0xff000000);
+                hiresBuf.setPixel(x, y, 0xff000000);
               }
             }
             curByte >>= 1;
@@ -954,7 +959,9 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
         y++;
       }
     }
-//    g.drawImage(hiresBuf, 0, 0, this);
+    Image image = new Image(getDisplay(), hiresBuf);
+    gc.drawImage(image, 0, 0);
+    image.dispose();
   }
 
   public void drawScreen(GC gc) {

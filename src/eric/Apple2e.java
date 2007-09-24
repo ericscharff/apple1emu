@@ -3,6 +3,7 @@ package eric;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Random;
 import java.util.ResourceBundle;
 
 import org.eclipse.swt.SWT;
@@ -1017,7 +1018,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     }
   }
 
-  private static final java.util.Random rand = new java.util.Random();
+  private static final Random rand = new Random();
   private static final byte randomBytes[] =
   {0x00,0x2D,0x2D,0x30,0x30,0x32,0x32,0x34,
    0x35,0x39,0x43,0x43,0x43,0x60,0x7F,0x7F};

@@ -36,6 +36,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   private static final int WRITE_TO_ROM = 0; /* ignore writes */
   private static final int WRITE_TO_BANK1 = 1;
   private static final int WRITE_TO_BANK2 = 2;
+  private int emuPeriod;
   private int[] mem;
   private int[] auxMem;
   private int videoPage;
@@ -79,7 +80,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   private void err(String s) {
     hitError = true;
     System.err.println(s);
-    System.out.println(cpu.dump());
+    if (cpu != null) System.out.println(cpu.dump());
     System.exit(1);
   }
 
@@ -152,6 +153,18 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
       diskRom[0x4d] = 0x00;
       diskRom[0x4e] = 0xea;
     } catch (Exception e) { e.printStackTrace(); }
+  }
+
+  private void loadPrefs() {
+    String fps = resourceBundle.getString("emu.fps");
+    if (fps != null) {
+      int i = Integer.parseInt(fps);
+      if ((i >= 1) && (i <= 100)) {
+        emuPeriod = 1000 / i;
+      } else {
+        err("emu.fps must be between 1 and 100");
+      }
+    }
   }
 
   //    private void diskEntryPoint() {
@@ -240,6 +253,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   public Apple2e(Composite parent, int style) throws IOException {
     super(parent, style);
     hitError = false;
+    emuPeriod = 100;
     disk = new DiskII();
     lcReadMode = READ_FROM_ROM;
     lcWriteMode = WRITE_TO_BANK1;
@@ -285,6 +299,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     loresColor[14] = new Color(d, 0x33, 0xff, 0x99);
     loresColor[15] = new Color(d, 0xff, 0xff, 0xff);
     loadRom();
+    loadPrefs();
     cpu = new M6502(this, (lcRom[16380]) + (lcRom[16381]) * 256);
 
     InputStream is = findResource("disk.drive0").openConnection().getInputStream();
@@ -779,7 +794,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
       System.exit(0);
     } else {
       redraw();
-      int napTime = Math.max(1, (int)(100 - System.currentTimeMillis() + startTime));
+      int napTime = Math.max(1, (int)(emuPeriod - System.currentTimeMillis() + startTime));
       getDisplay().timerExec(napTime, this);
     }
   }

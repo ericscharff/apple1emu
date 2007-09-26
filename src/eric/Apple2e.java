@@ -160,6 +160,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     String fps = resourceBundle.getString("emu.fps");
     if (fps != null) {
       int i = Integer.parseInt(fps);
+      if (true) System.out.println("fps: " + i);
       if ((i >= 1) && (i <= 100)) {
         emuPeriod = 1000 / i;
       } else {

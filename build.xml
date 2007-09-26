@@ -40,7 +40,7 @@
     </jar>
   </target>
 
-  <target name="run" depends="jar" description="Rn the main class">
+  <target name="run" depends="jar" description="Run the main class">
     <java fork="yes" classname="${main.class.name}">
       <classpath>
         <path refid="compile.classpath"/>

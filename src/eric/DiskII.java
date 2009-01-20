@@ -1,8 +1,5 @@
 package eric;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Random;
 
 public class DiskII {
@@ -383,16 +380,11 @@ public class DiskII {
     private static final int DISK_SIZE = 144*1024;
     private boolean needsSave;
 
-    public DosOrderImage(InputStream is) throws IOException {
+    public DosOrderImage(byte[] data) {
       needsSave = false;
-      myData = new byte[DISK_SIZE];
-      int offset=0;
-      int count;
-      while ((count = is.read(myData, offset, 4096)) >= 0) {
-        offset += count;
-      }
+      myData = data;
       validTrack = new boolean[TRACKS];
-      for (offset=0; offset < TRACKS; offset++) {
+      for (int offset=0; offset < TRACKS; offset++) {
         validTrack[offset] = true;
       }
     }
@@ -425,8 +417,8 @@ public class DiskII {
     public void close() {
       if (needsSave) {
         String fileName = System.currentTimeMillis() + ".dsk";
-        System.out.println("Saving disk:" + fileName);
           /*
+        System.out.println("Saving disk:" + fileName);
         try {
           FileOutputStream os = new FileOutputStream(fileName);
           os.write(myData);
@@ -483,8 +475,8 @@ public class DiskII {
     return 0;
   }
 
-  public void diskInsert(int drive, String name, InputStream file, boolean writeProtected, boolean createIfNecessary) throws IOException {
-    DosOrderImage di = new DosOrderImage(file);
+  public void diskInsert(int drive, String name, byte[] data, boolean writeProtected, boolean createIfNecessary) {
+    DosOrderImage di = new DosOrderImage(data);
     Floppy f = floppy[drive];
     if (f.diskData != null) {
       removeDisk(drive);

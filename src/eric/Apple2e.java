@@ -1,10 +1,6 @@
 package eric;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Random;
-import java.util.ResourceBundle;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -72,7 +68,6 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   private ImageData hiresBuf;
   private Color[] loresColor;
   private int screenMode;
-  private ResourceBundle resourceBundle;
 
   //    private static final int sectorMap[] = {
   //            0x0, 0x7, 0xE, 0x6, 0xD, 0x5, 0xC, 0x4,
@@ -85,79 +80,27 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     System.exit(1);
   }
 
-  private void warn(String s) {
-    System.err.println(s);
-  }
-
-  private String makeResourceName(String resourceName) {
-    String prefix = "/resources/";
-    if (resourceName.startsWith("image.")) {
-      prefix += "images/";
-    } else if (resourceName.startsWith("disk.")) {
-      prefix += "disks/";
-    }
-    return prefix + resourceBundle.getString(resourceName);
-  }
-
-  private URL findResource(String resourceName) {
-    return getClass().getResource(makeResourceName(resourceName));
-  }
-
-  
-  private InputStream findResourceAsStream(String resourceName) {
-    return getClass().getResourceAsStream(makeResourceName(resourceName));
-  }
-
-  private Image loadImageResource(String resourceName) throws IOException {
-    InputStream is = findResourceAsStream(resourceName);
-    if (is == null) {
-      warn("Could not find resource: " + resourceName);
-      return null;
-    } else {
-      try {
-        return new Image(getDisplay(), is);
-      } finally {
-        is.close();
-      }
-    }
-  }
-  
   public Point computeSize(int wHint, int hHint, boolean changed) {
     return new Point(280, 192);
   }
 
   private void loadRom() {
-    try {
-      charRom = loadImageResource("image.charset");
-      charAltRom = loadImageResource("image.charset.alt");
-      charRomInverse = loadImageResource("image.charset");
-      charRomFlash = loadImageResource("image.charset");
-      InputStream is = findResourceAsStream("rom.bios");
-      lcRom = new int[16384];
-      int a = 0;
-      int b;
-      while ((b = is.read()) >= 0) {
-        lcRom[a] = b;
-        a++;
-      }
-      is.close();
-      is = findResourceAsStream("rom.disk");
-      diskRom = new int[256];
-      a=0;
-      while ((b = is.read()) >= 0) {
-        diskRom[a] = b;
-        a++;
-      }
-      is.close();
-      // Remove delays from disk rom
-      diskRom[0x4c] = 0xa9;
-      diskRom[0x4d] = 0x00;
-      diskRom[0x4e] = 0xea;
-    } catch (Exception e) { e.printStackTrace(); }
+    ResourceHelper helper = new ResourceHelper();
+    Display d = getDisplay();
+    charRom = helper.loadImageResource(d, "image.charset");
+    charAltRom = helper.loadImageResource(d, "image.charset.alt");
+    charRomInverse = helper.loadImageResource(d, "image.charset");
+    charRomFlash = helper.loadImageResource(d, "image.charset");
+    lcRom = helper.loadBinaryResource("rom.bios", 16384);
+    diskRom = helper.loadBinaryResource("rom.disk", 256);
+    // Remove delays from disk rom
+    diskRom[0x4c] = 0xa9;
+    diskRom[0x4d] = 0x00;
+    diskRom[0x4e] = 0xea;
   }
 
   private void loadPrefs() {
-    String fps = resourceBundle.getString("emu.fps");
+    String fps = new ResourceHelper().getProperty("emu.fps");
     if (fps != null) {
       int i = Integer.parseInt(fps);
       if (true) System.out.println("fps: " + i);
@@ -252,7 +195,7 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   //            cpu.doRTS(0);
   //    }
 
-  public Apple2e(Composite parent, int style) throws IOException {
+  public Apple2e(Composite parent, int style) {
     super(parent, style);
     hitError = false;
     emuPeriod = 100;
@@ -278,7 +221,6 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     use80ColumnVideo = false;
     useAltCharSet = false;
     screenMode = TEXTMODE;
-    resourceBundle = ResourceBundle.getBundle("resources.apple2");
     loresColor = new Color[16];
     Display d = getDisplay();
     Image image = new Image(d, 282, 192);
@@ -304,16 +246,9 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
     loadPrefs();
     cpu = new M6502(this, (lcRom[16380]) + (lcRom[16381]) * 256);
 
-    InputStream is = findResource("disk.drive0").openConnection().getInputStream();
-    if (is != null) {
-      try {
-        disk.diskInsert(0, "Untitled", is, true, false);
-      } catch (IOException ex) {
-        ex.printStackTrace();
-      } finally {
-        is.close();
-      }
-    }
+    disk.diskInsert(0, "Untitled",
+                    new ResourceHelper().loadBytes("disk.drive0", 144*1024),
+                    true, false);
     addListener(SWT.KeyDown, new Listener() {
       public void handleEvent(Event event) {
         lastKey = event.character;
@@ -999,24 +934,20 @@ public class Apple2e extends Canvas implements Runnable, M6502.Memory {
   }
 
   public static void main(String args[]) {
-    try {
-      Display display = new Display();
-      Shell shell = new Shell(display);
-      shell.setLayout(new FillLayout(SWT.VERTICAL));
-      shell.setText("Apple //e");
-      Apple2e me = new Apple2e(shell, SWT.NONE);
-      shell.pack();
-      shell.open();
-      display.timerExec(100, me);
-      while (!shell.isDisposed()) {
-        if (!display.readAndDispatch()) {
-          display.sleep();
-        }
+    Display display = new Display();
+    Shell shell = new Shell(display);
+    shell.setLayout(new FillLayout(SWT.VERTICAL));
+    shell.setText("Apple //e");
+    Apple2e me = new Apple2e(shell, SWT.NONE);
+    shell.pack();
+    shell.open();
+    display.timerExec(100, me);
+    while (!shell.isDisposed()) {
+      if (!display.readAndDispatch()) {
+        display.sleep();
       }
-      display.dispose();
-    } catch (IOException ex) {
-      ex.printStackTrace();
     }
+    display.dispose();
   }
 
   private static final Random rand = new Random();

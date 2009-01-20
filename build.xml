@@ -6,7 +6,7 @@
   <property name="lib.dir" value="lib"/>
   <property name="out.jar" value="${jar.out.dir}/apple2.jar"/>
   <property name="resource.dir" value="resources"/>
-  <property name="main.class.name" value="eric.Apple2e"/>
+  <property name="main.class.name" value="eric.SWTUI"/>
 
   <path id="compile.classpath">
     <fileset dir="${lib.dir}">

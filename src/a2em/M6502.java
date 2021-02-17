@@ -1,4 +1,4 @@
-package eric;
+package a2em;
 
 public class M6502 {
   public static final int cFlag = 0x01;

@@ -1,4 +1,4 @@
-package eric;
+package a2em;
 
 import java.util.Random;
 

@@ -10,7 +10,7 @@ Be sure to put the swt.jar in the lib directory:
   ant run
 
 Usage:
-  java -cp build/jars/apple2.jar:lib/swt.jar eric.Apple2e
+  java -cp build/jars/apple2.jar:lib/swt.jar a2em.Apple2e
 
 or just
   java -jar build/jars/apple2.jar

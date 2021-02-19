@@ -3,7 +3,6 @@ package a2em;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
-
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
@@ -36,7 +35,6 @@ public class ResourceHelper {
     return getClass().getResource(makeResourceName(resourceName));
   }
 
-  
   private InputStream findResourceAsStream(String resourceName) {
     return getClass().getResourceAsStream(makeResourceName(resourceName));
   }
@@ -83,8 +81,8 @@ public class ResourceHelper {
   public byte[] loadBytes(String name, int size) {
     int[] ints = loadBinaryResource(name, size);
     byte[] bytes = new byte[size];
-    for (int i=0; i < size; i++) {
-      bytes[i] = (byte)ints[i];
+    for (int i = 0; i < size; i++) {
+      bytes[i] = (byte) ints[i];
     }
     return bytes;
   }

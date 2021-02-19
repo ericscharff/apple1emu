@@ -197,14 +197,13 @@ public class Apple2e implements M6502.Memory {
     loadPrefs();
     cpu = new M6502(this, (lcRom[16380]) + (lcRom[16381]) * 256);
 
-    disk.diskInsert(0, "Untitled",
-                    new ResourceHelper().loadBytes("disk.drive0", 144*1024),
-                    true, false);
+    disk.diskInsert(
+        0, "Untitled", new ResourceHelper().loadBytes("disk.drive0", 144 * 1024), true, false);
   }
 
   private int doIO(int where) {
-    if ((readInternalSlotRom && (where >= 0xc100)) ||
-        (!readExternalSlot3 && (((where & 0xff00) == 0xc300) || (where >= 0xc800)))) {
+    if ((readInternalSlotRom && (where >= 0xc100))
+        || (!readExternalSlot3 && (((where & 0xff00) == 0xc300) || (where >= 0xc800)))) {
       return lcRom[where & 0xfff];
     }
     if ((where >= 0xc600) && (where < 0xc700)) {
@@ -216,236 +215,236 @@ public class Apple2e implements M6502.Memory {
     if (hitError || cpu.dumping) return 0;
     /* Soft switches */
     switch (where) {
-    case 0xc000:
-    case 0xc001:
-    case 0xc002:
-    case 0xc003:
-    case 0xc004:
-    case 0xc005:
-    case 0xc006:
-    case 0xc007:
-    case 0xc008:
-    case 0xc009:
-    case 0xc00a:
-    case 0xc00b:
-    case 0xc00c:
-    case 0xc00d:
-    case 0xc00e:
-    case 0xc00f:
-      /* Keyboard input - bit 7 = key is available */
-      return lastKey;
-    case 0xc010:
-      /* Keyboard latch */
-      int k = lastKey;
-      lastKey &= 0x7f;
-      return k;
-    case 0xc011:
-      return (lcReadMode == READ_FROM_BANK2) ? 0x80 : 0;
-    case 0xc012:
-      return (lcReadMode != READ_FROM_ROM) ? 0x80 : 0;
-    case 0xc013:
-      return (readAuxRam) ? 0x80 : 0;
-    case 0xc014:
-      return (writeAuxRam) ? 0x80 : 0;
-    case 0xc015:
-      return (readInternalSlotRom) ? 0x80 : 0;
-    case 0xc016:
-      return (readAuxZeroPage) ? 0x80 : 0;
-    case 0xc017:
-      return (readExternalSlot3) ? 0x80 : 0;
-    case 0xc018:
-      return (use80ColumnMapping) ? 0x80 : 0;
-    case 0xc019:
-      return 0x80;
-    case 0xc01a:
-      return ((screenMode & TEXTMODE) != 0) ? 0x80 : 0;
-    case 0xc01b:
-      return ((screenMode & MIXEDMODE) != 0) ? 0x80 : 0;
-    case 0xc01c:
-      return (videoPage == VIDEOPAGE2) ? 0x80 : 0;
-    case 0xc01d:
-      return ((screenMode & HIRESMODE) != 0) ? 0x80 : 0;
-    case 0xc01e:
-      return (useAltCharSet) ? 0x80 : 0;
-    case 0xc01f:
-      return (use80ColumnVideo) ? 0x80 : 0;
-    case 0xc030:
-      /* Tweak the speaker */
-      return randomData(true);
-    case 0xc050:
-      /* Turn off text mode */
-      screenMode &= ~TEXTMODE;
-      // Return VBL?
-      return randomData(false);
-    case 0xc051:
-      /* Turn on text mode */
-      screenMode |= TEXTMODE;
-      return randomData(true);
-    case 0xc052:
-      /* Turn off mixed graphics mode */
-      screenMode &= ~MIXEDMODE;
-      return randomData(true);
-    case 0xc053:
-      /* Turn on mixed graphics mode (graphics + 4 text lines) */
-      screenMode |= MIXEDMODE;
-      return randomData(true);
-    case 0xc054:
-      /* Set page 1 video ram */
-      videoPage = VIDEOPAGE1;
-      return randomData(true);
-    case 0xc055:
-      /* Set page 2 video ram */
-      videoPage = VIDEOPAGE2;
-      return randomData(true);
-    case 0xc056:
-      /* Set lo-res graphics */
-      screenMode &= ~HIRESMODE;
-      screenMode |= LORESMODE;
-      return randomData(true);
-    case 0xc057:
-      /* Set hi-res graphics */
-      screenMode &= ~LORESMODE;
-      screenMode |= HIRESMODE;
-      return randomData(true);
-    case 0xc058:
-      /* Set annunciator 0 (speaker?) to 0 */
-      return 0;
-    case 0xc05a:
-      /* Set annunciator 1 (speaker?) to 0 */
-      return 0;
-    case 0xc05c:
-      /* Set annunciator 2 (speaker?) to 1 */
-      return 0;
-    case 0xc05d:
-      /* Set annunciator 2 (speaker?) to 0 */
-      return 0;
-    case 0xc05e:
-      /* Set annunciator 3 (speaker?) to 0 */
-      return 0;
-    case 0xc05f:
-      /* Set annunciator 3 (speaker?) to 0 */
-      return 0;
-    case 0xc060:
-      /* cassette input and game button 3 */
-      return 0;
-    case 0xc061:
-      /* open apple key */
-      return 0;
-    case 0xc062:
-      /* closed apple key */
-      return 0;
-    case 0xc063:
-      /* "shift key mod" */
-      return randomData(shiftDown);
-    case 0xc080:
-      shouldSwitch = false;
-      lcReadMode = READ_FROM_BANK2;
-      lcWriteMode = WRITE_TO_ROM;
-      return randomData(true);
-    case 0xc081:
-      lcReadMode = READ_FROM_ROM;
-      if (shouldSwitch) {
-        lcWriteMode = WRITE_TO_BANK2;
-      } else {
-        shouldSwitch = true;
-      }
-      return randomData(true);
-    case 0xc082:
-      lcReadMode = READ_FROM_ROM;
-      lcWriteMode = WRITE_TO_ROM;
-      shouldSwitch = false;
-      return randomData(true);
-    case 0xc083:
-      lcReadMode = READ_FROM_BANK2;
-      if (shouldSwitch) {
-        lcWriteMode = WRITE_TO_BANK2;
-      } else {
-        shouldSwitch = true;
-      }
-      return randomData(true);
-    case 0xc088:
-      shouldSwitch = false;
-      lcReadMode = READ_FROM_BANK1;
-      lcWriteMode = WRITE_TO_ROM;
-      return randomData(true);
-    case 0xc089:
-      lcReadMode = READ_FROM_ROM;
-      if (shouldSwitch) {
-        lcWriteMode = WRITE_TO_BANK1;
-      } else {
-        shouldSwitch = true;
-      }
-      return randomData(true);
-    case 0xc08a:
-      lcReadMode = READ_FROM_ROM;
-      lcWriteMode = WRITE_TO_ROM;
-      shouldSwitch = false;
-      return randomData(true);
-    case 0xc08b:
-      lcReadMode = READ_FROM_BANK1;
-      if (shouldSwitch) {
-        lcWriteMode = WRITE_TO_BANK1;
-      } else {
-        shouldSwitch = true;
-      }
-      return randomData(true);
-    case 0xc0e0:
-      return disk.diskControlStepper(0xc0e0);
-    case 0xc0e1:
-      return disk.diskControlStepper(0xc0e1);
-    case 0xc0e2:
-      return disk.diskControlStepper(0xc0e2);
-    case 0xc0e3:
-      return disk.diskControlStepper(0xc0e3);
-    case 0xc0e4:
-      return disk.diskControlStepper(0xc0e4);
-    case 0xc0e5:
-      return disk.diskControlStepper(0xc0e5);
-    case 0xc0e6:
-      return disk.diskControlStepper(0xc0e6);
-    case 0xc0e7:
-      return disk.diskControlStepper(0xc0e7);
-    case 0xc0e8:
-      return disk.diskControlMotor(0xc0e8);
-    case 0xc0e9:
-      return disk.diskControlMotor(0xc0e9);
-    case 0xc0ea:
-      return disk.diskEnable(0xc0ea);
-    case 0xc0eb:
-      return disk.diskEnable(0xc0eb);
-    case 0xc0ec:
-      return disk.diskReadWrite();
-    case 0xc0ed:
-      return disk.diskSetLatchValue(0, false);
-    case 0xc0ee:
-      return disk.diskSetReadMode();
-    case 0xc0ef:
-      return disk.diskSetWriteMode();
-      //                case 0xc100:
-      //                case 0xc200:
-      //                case 0xc300:
-      //                case 0xc400:
-      //                case 0xc500:
-      //                case 0xc600:
-      //                case 0xc700:
-      //                        /* Slot ROM entry points */
-      //                        System.out.println("Slot entry point");
-      //                        return 96; /* RTS */
-    case 0xcfff:
-      /* Clear all the slot ROM bank switching */
-      return 0;
-    case 49194:
-    case 0xc036:
-    case 0xc070:
-    case 0xc0b0:
-    case 0xc064:
-    case 0xc065:
-    case 0xc066:
-    case 0xc067:
-      return randomData(false);
-      // Prodos specific
-    case 0xc068:
-      return randomData(true);
+      case 0xc000:
+      case 0xc001:
+      case 0xc002:
+      case 0xc003:
+      case 0xc004:
+      case 0xc005:
+      case 0xc006:
+      case 0xc007:
+      case 0xc008:
+      case 0xc009:
+      case 0xc00a:
+      case 0xc00b:
+      case 0xc00c:
+      case 0xc00d:
+      case 0xc00e:
+      case 0xc00f:
+        /* Keyboard input - bit 7 = key is available */
+        return lastKey;
+      case 0xc010:
+        /* Keyboard latch */
+        int k = lastKey;
+        lastKey &= 0x7f;
+        return k;
+      case 0xc011:
+        return (lcReadMode == READ_FROM_BANK2) ? 0x80 : 0;
+      case 0xc012:
+        return (lcReadMode != READ_FROM_ROM) ? 0x80 : 0;
+      case 0xc013:
+        return (readAuxRam) ? 0x80 : 0;
+      case 0xc014:
+        return (writeAuxRam) ? 0x80 : 0;
+      case 0xc015:
+        return (readInternalSlotRom) ? 0x80 : 0;
+      case 0xc016:
+        return (readAuxZeroPage) ? 0x80 : 0;
+      case 0xc017:
+        return (readExternalSlot3) ? 0x80 : 0;
+      case 0xc018:
+        return (use80ColumnMapping) ? 0x80 : 0;
+      case 0xc019:
+        return 0x80;
+      case 0xc01a:
+        return ((screenMode & TEXTMODE) != 0) ? 0x80 : 0;
+      case 0xc01b:
+        return ((screenMode & MIXEDMODE) != 0) ? 0x80 : 0;
+      case 0xc01c:
+        return (videoPage == VIDEOPAGE2) ? 0x80 : 0;
+      case 0xc01d:
+        return ((screenMode & HIRESMODE) != 0) ? 0x80 : 0;
+      case 0xc01e:
+        return (useAltCharSet) ? 0x80 : 0;
+      case 0xc01f:
+        return (use80ColumnVideo) ? 0x80 : 0;
+      case 0xc030:
+        /* Tweak the speaker */
+        return randomData(true);
+      case 0xc050:
+        /* Turn off text mode */
+        screenMode &= ~TEXTMODE;
+        // Return VBL?
+        return randomData(false);
+      case 0xc051:
+        /* Turn on text mode */
+        screenMode |= TEXTMODE;
+        return randomData(true);
+      case 0xc052:
+        /* Turn off mixed graphics mode */
+        screenMode &= ~MIXEDMODE;
+        return randomData(true);
+      case 0xc053:
+        /* Turn on mixed graphics mode (graphics + 4 text lines) */
+        screenMode |= MIXEDMODE;
+        return randomData(true);
+      case 0xc054:
+        /* Set page 1 video ram */
+        videoPage = VIDEOPAGE1;
+        return randomData(true);
+      case 0xc055:
+        /* Set page 2 video ram */
+        videoPage = VIDEOPAGE2;
+        return randomData(true);
+      case 0xc056:
+        /* Set lo-res graphics */
+        screenMode &= ~HIRESMODE;
+        screenMode |= LORESMODE;
+        return randomData(true);
+      case 0xc057:
+        /* Set hi-res graphics */
+        screenMode &= ~LORESMODE;
+        screenMode |= HIRESMODE;
+        return randomData(true);
+      case 0xc058:
+        /* Set annunciator 0 (speaker?) to 0 */
+        return 0;
+      case 0xc05a:
+        /* Set annunciator 1 (speaker?) to 0 */
+        return 0;
+      case 0xc05c:
+        /* Set annunciator 2 (speaker?) to 1 */
+        return 0;
+      case 0xc05d:
+        /* Set annunciator 2 (speaker?) to 0 */
+        return 0;
+      case 0xc05e:
+        /* Set annunciator 3 (speaker?) to 0 */
+        return 0;
+      case 0xc05f:
+        /* Set annunciator 3 (speaker?) to 0 */
+        return 0;
+      case 0xc060:
+        /* cassette input and game button 3 */
+        return 0;
+      case 0xc061:
+        /* open apple key */
+        return 0;
+      case 0xc062:
+        /* closed apple key */
+        return 0;
+      case 0xc063:
+        /* "shift key mod" */
+        return randomData(shiftDown);
+      case 0xc080:
+        shouldSwitch = false;
+        lcReadMode = READ_FROM_BANK2;
+        lcWriteMode = WRITE_TO_ROM;
+        return randomData(true);
+      case 0xc081:
+        lcReadMode = READ_FROM_ROM;
+        if (shouldSwitch) {
+          lcWriteMode = WRITE_TO_BANK2;
+        } else {
+          shouldSwitch = true;
+        }
+        return randomData(true);
+      case 0xc082:
+        lcReadMode = READ_FROM_ROM;
+        lcWriteMode = WRITE_TO_ROM;
+        shouldSwitch = false;
+        return randomData(true);
+      case 0xc083:
+        lcReadMode = READ_FROM_BANK2;
+        if (shouldSwitch) {
+          lcWriteMode = WRITE_TO_BANK2;
+        } else {
+          shouldSwitch = true;
+        }
+        return randomData(true);
+      case 0xc088:
+        shouldSwitch = false;
+        lcReadMode = READ_FROM_BANK1;
+        lcWriteMode = WRITE_TO_ROM;
+        return randomData(true);
+      case 0xc089:
+        lcReadMode = READ_FROM_ROM;
+        if (shouldSwitch) {
+          lcWriteMode = WRITE_TO_BANK1;
+        } else {
+          shouldSwitch = true;
+        }
+        return randomData(true);
+      case 0xc08a:
+        lcReadMode = READ_FROM_ROM;
+        lcWriteMode = WRITE_TO_ROM;
+        shouldSwitch = false;
+        return randomData(true);
+      case 0xc08b:
+        lcReadMode = READ_FROM_BANK1;
+        if (shouldSwitch) {
+          lcWriteMode = WRITE_TO_BANK1;
+        } else {
+          shouldSwitch = true;
+        }
+        return randomData(true);
+      case 0xc0e0:
+        return disk.diskControlStepper(0xc0e0);
+      case 0xc0e1:
+        return disk.diskControlStepper(0xc0e1);
+      case 0xc0e2:
+        return disk.diskControlStepper(0xc0e2);
+      case 0xc0e3:
+        return disk.diskControlStepper(0xc0e3);
+      case 0xc0e4:
+        return disk.diskControlStepper(0xc0e4);
+      case 0xc0e5:
+        return disk.diskControlStepper(0xc0e5);
+      case 0xc0e6:
+        return disk.diskControlStepper(0xc0e6);
+      case 0xc0e7:
+        return disk.diskControlStepper(0xc0e7);
+      case 0xc0e8:
+        return disk.diskControlMotor(0xc0e8);
+      case 0xc0e9:
+        return disk.diskControlMotor(0xc0e9);
+      case 0xc0ea:
+        return disk.diskEnable(0xc0ea);
+      case 0xc0eb:
+        return disk.diskEnable(0xc0eb);
+      case 0xc0ec:
+        return disk.diskReadWrite();
+      case 0xc0ed:
+        return disk.diskSetLatchValue(0, false);
+      case 0xc0ee:
+        return disk.diskSetReadMode();
+      case 0xc0ef:
+        return disk.diskSetWriteMode();
+        //                case 0xc100:
+        //                case 0xc200:
+        //                case 0xc300:
+        //                case 0xc400:
+        //                case 0xc500:
+        //                case 0xc600:
+        //                case 0xc700:
+        //                        /* Slot ROM entry points */
+        //                        System.out.println("Slot entry point");
+        //                        return 96; /* RTS */
+      case 0xcfff:
+        /* Clear all the slot ROM bank switching */
+        return 0;
+      case 49194:
+      case 0xc036:
+      case 0xc070:
+      case 0xc0b0:
+      case 0xc064:
+      case 0xc065:
+      case 0xc066:
+      case 0xc067:
+        return randomData(false);
+        // Prodos specific
+      case 0xc068:
+        return randomData(true);
     }
     err("Read from Unknown I/O Address: " + where);
     return 96;
@@ -453,63 +452,63 @@ public class Apple2e implements M6502.Memory {
 
   private void doIO(int where, int what) {
     switch (where) {
-    case 0xc000:
-      use80ColumnMapping = false;
-      return;
-    case 0xc001:
-      use80ColumnMapping = true;
-      return;
-    case 0xc002:
-      readAuxRam = false;
-      return;
-    case 0xc003:
-      readAuxRam = true;
-      return;
-    case 0xc004:
-      writeAuxRam = false;
-      return;
-    case 0xc005:
-      writeAuxRam = true;
-      return;
-    case 0xc006:
-      readInternalSlotRom = false;
-      return;
-    case 0xc007:
-      readInternalSlotRom = true;
-      return;
-    case 0xc008:
-      readAuxZeroPage = false;
-      return;
-    case 0xc009:
-      readAuxZeroPage = true;
-      return;
-    case 0xc00a:
-      readExternalSlot3 = false;
-      return;
-    case 0xc00b:
-      readExternalSlot3 = true;
-      return;
-    case 0xc00c:
-      use80ColumnVideo = false;
-      return;
-    case 0xc00d:
-      use80ColumnVideo = true;
-      return;
-    case 0xc00e:
-      useAltCharSet = false;
-      return;
-    case 0xc00f:
-      useAltCharSet = true;
-      return;
-      // Used by Merlin
-    case 0xc073:
-      return;
-      // Used by Ultima V
-    case 0xc074:
-      return;
-    case 0xc0ed:
-      disk.diskSetLatchValue(what, true);
-      return;
+      case 0xc000:
+        use80ColumnMapping = false;
+        return;
+      case 0xc001:
+        use80ColumnMapping = true;
+        return;
+      case 0xc002:
+        readAuxRam = false;
+        return;
+      case 0xc003:
+        readAuxRam = true;
+        return;
+      case 0xc004:
+        writeAuxRam = false;
+        return;
+      case 0xc005:
+        writeAuxRam = true;
+        return;
+      case 0xc006:
+        readInternalSlotRom = false;
+        return;
+      case 0xc007:
+        readInternalSlotRom = true;
+        return;
+      case 0xc008:
+        readAuxZeroPage = false;
+        return;
+      case 0xc009:
+        readAuxZeroPage = true;
+        return;
+      case 0xc00a:
+        readExternalSlot3 = false;
+        return;
+      case 0xc00b:
+        readExternalSlot3 = true;
+        return;
+      case 0xc00c:
+        use80ColumnVideo = false;
+        return;
+      case 0xc00d:
+        use80ColumnVideo = true;
+        return;
+      case 0xc00e:
+        useAltCharSet = false;
+        return;
+      case 0xc00f:
+        useAltCharSet = true;
+        return;
+        // Used by Merlin
+      case 0xc073:
+        return;
+        // Used by Ultima V
+      case 0xc074:
+        return;
+      case 0xc0ed:
+        disk.diskSetLatchValue(what, true);
+        return;
     }
     /* Most soft switches are accessed via reads, but some are accessed */
     /* through writes.  Though strictly not compatible with a real      */
@@ -532,20 +531,20 @@ public class Apple2e implements M6502.Memory {
     }
     if (where >= 0xd000) {
       switch (lcReadMode) {
-      case READ_FROM_ROM:
-        return lcRom[where - 0xc000];
-      case READ_FROM_BANK1:
-        if (readAuxZeroPage) {
-          return auxLcBank1[where - 0xd000];
-        } else {
-          return lcBank1[where - 0xd000];
-        }
-      case READ_FROM_BANK2:
-        if (readAuxZeroPage) {
-          return auxLcBank2[where - 0xd000];
-        } else {
-          return lcBank2[where - 0xd000];
-        }
+        case READ_FROM_ROM:
+          return lcRom[where - 0xc000];
+        case READ_FROM_BANK1:
+          if (readAuxZeroPage) {
+            return auxLcBank1[where - 0xd000];
+          } else {
+            return lcBank1[where - 0xd000];
+          }
+        case READ_FROM_BANK2:
+          if (readAuxZeroPage) {
+            return auxLcBank2[where - 0xd000];
+          } else {
+            return lcBank2[where - 0xd000];
+          }
       }
     }
     if (use80ColumnMapping) {
@@ -593,26 +592,29 @@ public class Apple2e implements M6502.Memory {
     }
     if (where >= 0xd000) {
       switch (lcWriteMode) {
-      case WRITE_TO_ROM:
-        break;
-      case WRITE_TO_BANK1:
-        if (readAuxZeroPage) {
-          auxLcBank1[where - 0xd000] = what;
-        } else {
-          lcBank1[where - 0xd000] = what;
-        }
-        break;
-      case WRITE_TO_BANK2:
-        if (readAuxZeroPage) {
-          auxLcBank2[where - 0xd000] = what;
-        } else {
-          lcBank2[where - 0xd000] = what;
-        }
-        break;
+        case WRITE_TO_ROM:
+          break;
+        case WRITE_TO_BANK1:
+          if (readAuxZeroPage) {
+            auxLcBank1[where - 0xd000] = what;
+          } else {
+            lcBank1[where - 0xd000] = what;
+          }
+          break;
+        case WRITE_TO_BANK2:
+          if (readAuxZeroPage) {
+            auxLcBank2[where - 0xd000] = what;
+          } else {
+            lcBank2[where - 0xd000] = what;
+          }
+          break;
       }
       return;
     }
-    if (where >= 0xc000) { doIO(where, what); return; }
+    if (where >= 0xc000) {
+      doIO(where, what);
+      return;
+    }
     if (use80ColumnMapping) {
       if ((where >= 0x400) && (where <= 0x7ff)) {
         if (videoPage == VIDEOPAGE1) {
@@ -664,14 +666,14 @@ public class Apple2e implements M6502.Memory {
   }
 
   private static final Random rand = new Random();
-  private static final byte randomBytes[] =
-  {0x00,0x2D,0x2D,0x30,0x30,0x32,0x32,0x34,
-   0x35,0x39,0x43,0x43,0x43,0x60,0x7F,0x7F};
+  private static final byte randomBytes[] = {
+    0x00, 0x2D, 0x2D, 0x30, 0x30, 0x32, 0x32, 0x34,
+    0x35, 0x39, 0x43, 0x43, 0x43, 0x60, 0x7F, 0x7F
+  };
+
   public static int randomData(boolean highBit) {
     int r = rand.nextInt() & 0xff;
-    if (r <= 170)
-      return 0x20 | (highBit ? 0x80 : 0);
-    else
-      return randomBytes[r & 15] | (highBit ? 0x80 : 0);
+    if (r <= 170) return 0x20 | (highBit ? 0x80 : 0);
+    else return randomBytes[r & 15] | (highBit ? 0x80 : 0);
   }
 }

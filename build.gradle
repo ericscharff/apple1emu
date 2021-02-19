@@ -5,10 +5,6 @@ repositories {
 apply plugin: 'java'
 apply plugin: 'application'
 
-compileJava {
-  options.release = 8
-}
-
 mainClassName = 'a2em.SWTUI'
 
 dependencies {

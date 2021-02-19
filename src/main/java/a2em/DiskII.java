@@ -10,22 +10,30 @@ public class DiskII {
 
   private static final int DRIVE_1 = 0;
   private static final int DRIVE_2 = 1;
-  private static final byte sectorNumber[][] =
-  {{0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B,
-    0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F},
-   {0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04,
-    0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F},
-   {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}};
-  private static final short diskByte[] =
-  {0x96,0x97,0x9A,0x9B,0x9D,0x9E,0x9F,0xA6,
-   0xA7,0xAB,0xAC,0xAD,0xAE,0xAF,0xB2,0xB3,
-   0xB4,0xB5,0xB6,0xB7,0xB9,0xBA,0xBB,0xBC,
-   0xBD,0xBE,0xBF,0xCB,0xCD,0xCE,0xCF,0xD3,
-   0xD6,0xD7,0xD9,0xDA,0xDB,0xDC,0xDD,0xDE,
-   0xDF,0xE5,0xE6,0xE7,0xE9,0xEA,0xEB,0xEC,
-   0xED,0xEE,0xEF,0xF2,0xF3,0xF4,0xF5,0xF6,
-   0xF7,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF};
+  private static final byte sectorNumber[][] = {
+    {
+      0x00, 0x08, 0x01, 0x09, 0x02, 0x0A, 0x03, 0x0B,
+      0x04, 0x0C, 0x05, 0x0D, 0x06, 0x0E, 0x07, 0x0F
+    },
+    {
+      0x00, 0x07, 0x0E, 0x06, 0x0D, 0x05, 0x0C, 0x04,
+      0x0B, 0x03, 0x0A, 0x02, 0x09, 0x01, 0x08, 0x0F
+    },
+    {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    }
+  };
+  private static final short diskByte[] = {
+    0x96, 0x97, 0x9A, 0x9B, 0x9D, 0x9E, 0x9F, 0xA6,
+    0xA7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB2, 0xB3,
+    0xB4, 0xB5, 0xB6, 0xB7, 0xB9, 0xBA, 0xBB, 0xBC,
+    0xBD, 0xBE, 0xBF, 0xCB, 0xCD, 0xCE, 0xCF, 0xD3,
+    0xD6, 0xD7, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE,
+    0xDF, 0xE5, 0xE6, 0xE7, 0xE9, 0xEA, 0xEB, 0xEC,
+    0xED, 0xEE, 0xEF, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6,
+    0xF7, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF
+  };
 
   private abstract class DiskImage {
     protected boolean[] validTrack;
@@ -36,15 +44,15 @@ public class DiskII {
     }
 
     private byte code44a(int a) {
-      return (byte)(0xff & (((a >> 1) & 0x55) | 0xaa));
+      return (byte) (0xff & (((a >> 1) & 0x55) | 0xaa));
     }
 
     private byte code44b(int a) {
-      return (byte)(0xff & ((a & 0x55) | 0xaa));
+      return (byte) (0xff & ((a & 0x55) | 0xaa));
     }
 
     private int addValue(int value, int a) {
-      return (value << 2) | ((a&1) << 1) | ((a&2) >> 1);
+      return (value << 2) | ((a & 1) << 1) | ((a & 2) >> 1);
     }
 
     private void code62(int sector) {
@@ -57,16 +65,22 @@ public class DiskII {
 
         while (offset != 0x02) {
           int value = 0;
-          value = addValue(value, workBuffer[sectorBase + offset]); offset -= 0x56; offset &= 0xff;
-          value = addValue(value, workBuffer[sectorBase + offset]); offset -= 0x56; offset &= 0xff;
-          value = addValue(value, workBuffer[sectorBase + offset]); offset -= 0x53; offset &= 0xff;
-          workBuffer[resultOff++] = (byte)(value << 2);
+          value = addValue(value, workBuffer[sectorBase + offset]);
+          offset -= 0x56;
+          offset &= 0xff;
+          value = addValue(value, workBuffer[sectorBase + offset]);
+          offset -= 0x56;
+          offset &= 0xff;
+          value = addValue(value, workBuffer[sectorBase + offset]);
+          offset -= 0x53;
+          offset &= 0xff;
+          workBuffer[resultOff++] = (byte) (value << 2);
         }
-        workBuffer[resultOff-2] &= 0x3f;
-        workBuffer[resultOff-1] &= 0x3f;
+        workBuffer[resultOff - 2] &= 0x3f;
+        workBuffer[resultOff - 1] &= 0x3f;
         int loop = 0;
         while (loop < 0x100) {
-          workBuffer[resultOff++] = workBuffer[sectorBase+loop++];
+          workBuffer[resultOff++] = workBuffer[sectorBase + loop++];
         }
       }
       {
@@ -79,10 +93,10 @@ public class DiskII {
         int loop = 342;
 
         while (loop-- != 0) {
-          workBuffer[resultPtr++] = (byte)(0xff & (savedVal ^ workBuffer[sourcePtr]));
+          workBuffer[resultPtr++] = (byte) (0xff & (savedVal ^ workBuffer[sourcePtr]));
           savedVal = workBuffer[sourcePtr++] & 0xff;
         }
-        workBuffer[resultPtr] = (byte)(savedVal & 0xff);
+        workBuffer[resultPtr] = (byte) (savedVal & 0xff);
       }
       {
         // using a lookup table, convert the 6-bit bytes into disk bytes.  A
@@ -94,13 +108,13 @@ public class DiskII {
         int resultPtr = 0x1000;
         int loop = 343;
         while (loop-- != 0)
-          workBuffer[resultPtr++] = (byte)diskByte[(workBuffer[sourcePtr++] & 0xff) >> 2];
+          workBuffer[resultPtr++] = (byte) diskByte[(workBuffer[sourcePtr++] & 0xff) >> 2];
       }
     }
 
     protected int nibblizeTrack(byte[] trackImageBuffer, int dosOrder, int track) {
       /* zero 4K of the work buffer, starting 4K into it */
-      for (int i=0x1000; i < 0x2000; i++) {
+      for (int i = 0x1000; i < 0x2000; i++) {
         workBuffer[i] = 0;
       }
       int where = 0;
@@ -108,8 +122,8 @@ public class DiskII {
       int loop;
 
       // Write 48 sync bytes
-      for (loop=0; loop < 48; loop++) {
-        trackImageBuffer[where++] = (byte)0xff;
+      for (loop = 0; loop < 48; loop++) {
+        trackImageBuffer[where++] = (byte) 0xff;
       }
 
       while (sector < 16) {
@@ -120,42 +134,42 @@ public class DiskII {
         // - Sector number ("4 AND 4" encoded)
         // - Checksum ("4 AND 4" encoded)
         // - Epilog (DEAAEB)
-        trackImageBuffer[where++] = (byte)0xd5;
-        trackImageBuffer[where++] = (byte)0xaa;
-        trackImageBuffer[where++] = (byte)0x96;
-        trackImageBuffer[where++] = (byte)0xff;
-        trackImageBuffer[where++] = (byte)0xfe;
+        trackImageBuffer[where++] = (byte) 0xd5;
+        trackImageBuffer[where++] = (byte) 0xaa;
+        trackImageBuffer[where++] = (byte) 0x96;
+        trackImageBuffer[where++] = (byte) 0xff;
+        trackImageBuffer[where++] = (byte) 0xfe;
         trackImageBuffer[where++] = code44a(track);
         trackImageBuffer[where++] = code44b(track);
         trackImageBuffer[where++] = code44a(sector);
         trackImageBuffer[where++] = code44b(sector);
         trackImageBuffer[where++] = code44a(0xfe ^ track ^ sector);
         trackImageBuffer[where++] = code44b(0xfe ^ track ^ sector);
-        trackImageBuffer[where++] = (byte)0xde;
-        trackImageBuffer[where++] = (byte)0xaa;
-        trackImageBuffer[where++] = (byte)0xeb;
+        trackImageBuffer[where++] = (byte) 0xde;
+        trackImageBuffer[where++] = (byte) 0xaa;
+        trackImageBuffer[where++] = (byte) 0xeb;
         // Write the second gap, 6 sync bytes
-        for (loop=0; loop < 6; loop++) {
-          trackImageBuffer[where++] = (byte)0xff;
+        for (loop = 0; loop < 6; loop++) {
+          trackImageBuffer[where++] = (byte) 0xff;
         }
         // Write the data filed
         // - prologus (D5AAAD)
         // - 343 6-bit bytes of nibblized data, including a 6 bit checksum
         // - epilogue (DEAAEB)
-        trackImageBuffer[where++] = (byte)0xd5;
-        trackImageBuffer[where++] = (byte)0xaa;
-        trackImageBuffer[where++] = (byte)0xad;
+        trackImageBuffer[where++] = (byte) 0xd5;
+        trackImageBuffer[where++] = (byte) 0xaa;
+        trackImageBuffer[where++] = (byte) 0xad;
         code62(sectorNumber[dosOrder][sector]);
-        for (loop=0; loop < 343; loop++) {
+        for (loop = 0; loop < 343; loop++) {
           trackImageBuffer[where++] = workBuffer[4096 + loop];
         }
-        trackImageBuffer[where++] = (byte)0xde;
-        trackImageBuffer[where++] = (byte)0xaa;
-        trackImageBuffer[where++] = (byte)0xeb;
+        trackImageBuffer[where++] = (byte) 0xde;
+        trackImageBuffer[where++] = (byte) 0xaa;
+        trackImageBuffer[where++] = (byte) 0xeb;
 
         // Write the third gap, 27 sync bytes
-        for (loop=0; loop < 27; loop++) {
-          trackImageBuffer[where++] = (byte)0xff;
+        for (loop = 0; loop < 27; loop++) {
+          trackImageBuffer[where++] = (byte) 0xff;
         }
         sector++;
       }
@@ -170,7 +184,7 @@ public class DiskII {
         sixBitByte = new byte[0x80];
         int loop = 0;
         while (loop < 0x40) {
-          sixBitByte[0xff & (diskByte[loop] - 0x80)] = (byte)(loop << 2);
+          sixBitByte[0xff & (diskByte[loop] - 0x80)] = (byte) (loop << 2);
           loop++;
         }
       }
@@ -193,7 +207,7 @@ public class DiskII {
         int loop = 342;
 
         while (loop-- != 0) {
-          workBuffer[resultPtr] = (byte)(savedVal ^ workBuffer[sourcePtr++]);
+          workBuffer[resultPtr] = (byte) (savedVal ^ workBuffer[sourcePtr++]);
           savedVal = workBuffer[resultPtr++];
         }
       }
@@ -205,19 +219,28 @@ public class DiskII {
 
         while (offset != 0x02) {
           if (offset >= 0xac) {
-            workBuffer[imagePtr+offset] = (byte)((workBuffer[sectorBase+offset] & 0xfc) |
-                                                 ((workBuffer[lowBitsPtr] & 0x80) >> 7) |
-                                                 ((workBuffer[lowBitsPtr] & 0x40) >> 5));
+            workBuffer[imagePtr + offset] =
+                (byte)
+                    ((workBuffer[sectorBase + offset] & 0xfc)
+                        | ((workBuffer[lowBitsPtr] & 0x80) >> 7)
+                        | ((workBuffer[lowBitsPtr] & 0x40) >> 5));
           }
-          offset -= 0x56; offset &= 0xff;
-          workBuffer[imagePtr+offset] = (byte)((workBuffer[sectorBase+offset] & 0xfc) |
-                                               ((workBuffer[lowBitsPtr] & 0x20) >> 5) |
-                                               ((workBuffer[lowBitsPtr] & 0x10) >> 3));
-          offset -= 0x56; offset &= 0xff;
-          workBuffer[imagePtr+offset] = (byte)((workBuffer[sectorBase+offset] & 0xfc) |
-                                               ((workBuffer[lowBitsPtr] & 0x08) >> 3) |
-                                               ((workBuffer[lowBitsPtr] & 0x04) >> 1));
-          offset -= 0x53; offset &= 0xff;
+          offset -= 0x56;
+          offset &= 0xff;
+          workBuffer[imagePtr + offset] =
+              (byte)
+                  ((workBuffer[sectorBase + offset] & 0xfc)
+                      | ((workBuffer[lowBitsPtr] & 0x20) >> 5)
+                      | ((workBuffer[lowBitsPtr] & 0x10) >> 3));
+          offset -= 0x56;
+          offset &= 0xff;
+          workBuffer[imagePtr + offset] =
+              (byte)
+                  ((workBuffer[sectorBase + offset] & 0xfc)
+                      | ((workBuffer[lowBitsPtr] & 0x08) >> 3)
+                      | ((workBuffer[lowBitsPtr] & 0x04) >> 1));
+          offset -= 0x53;
+          offset &= 0xff;
           lowBitsPtr++;
         }
       }
@@ -229,14 +252,14 @@ public class DiskII {
       // buffer at offset 4k.  Then call decode62() to denibblize the data
       // in the buffer and write it into the first part of the work buffer
       // offset by the sector number
-      for (int i=0; i < 4096; i++) {
+      for (int i = 0; i < 4096; i++) {
         workBuffer[i] = 0;
       }
       int offset = 0;
       int partsLeft = 33;
       int sector = 0;
       while (partsLeft-- != 0) {
-        byte[] byteVal = new byte[] { 0, 0, 0 };
+        byte[] byteVal = new byte[] {0, 0, 0};
         int byteNum = 0;
         int loop = nibbles;
         while ((loop-- != 0) && (byteNum < 3)) {
@@ -249,7 +272,7 @@ public class DiskII {
             offset = 0;
           }
         }
-        if ((byteNum == 3) && ((byteVal[1]&0xff) == 0xaa)) {
+        if ((byteNum == 3) && ((byteVal[1] & 0xff) == 0xaa)) {
           // found a sector
           int loop2 = 0;
           int tempOffset = offset;
@@ -258,8 +281,7 @@ public class DiskII {
             if (tempOffset >= nibbles) tempOffset = 0;
           }
           if ((byteVal[2] & 0xff) == 0x96) {
-            sector = ((workBuffer[0x1004] & 0x55) << 1) |
-              (workBuffer[0x1005] & 0x55);
+            sector = ((workBuffer[0x1004] & 0x55) << 1) | (workBuffer[0x1005] & 0x55);
           } else if ((byteVal[2] & 0xff) == 0xad) {
             decode62(sectorNumber[dosOrder][sector] << 8);
             sector = 0;
@@ -267,10 +289,14 @@ public class DiskII {
         }
       }
     }
+
     public abstract boolean canRead();
+
     public abstract void read(int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles);
+
     public abstract void write(int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles);
-    public void close() { }
+
+    public void close() {}
   }
 
   private class Floppy {
@@ -299,7 +325,7 @@ public class DiskII {
 
   public DiskII() {
     floppy = new Floppy[DRIVES];
-    for (int i=0; i < DRIVES; i++) {
+    for (int i = 0; i < DRIVES; i++) {
       floppy[i] = new Floppy();
     }
   }
@@ -361,30 +387,32 @@ public class DiskII {
   }
 
   /* =========== */
-  private void imageReadTrack(DiskImage image, int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles) {
+  private void imageReadTrack(
+      DiskImage image, int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles) {
     if (image.canRead() && image.validTrack[track]) {
       image.read(track, quarterTrack, trackImageBuffer, nibbles);
     } else {
       for (nibbles[0] = 0; nibbles[0] < NIBBLES; nibbles[0]++) {
-        trackImageBuffer[nibbles[0]] = (byte)rand.nextInt(8);
+        trackImageBuffer[nibbles[0]] = (byte) rand.nextInt(8);
       }
     }
   }
 
-  private void imageWriteTrack(DiskImage image, int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles) {
+  private void imageWriteTrack(
+      DiskImage image, int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles) {
     image.write(track, quarterTrack, trackImageBuffer, nibbles);
   }
 
   private class DosOrderImage extends DiskImage {
     private byte[] myData;
-    private static final int DISK_SIZE = 144*1024;
+    private static final int DISK_SIZE = 144 * 1024;
     private boolean needsSave;
 
     public DosOrderImage(byte[] data) {
       needsSave = false;
       myData = data;
       validTrack = new boolean[TRACKS];
-      for (int offset=0; offset < TRACKS; offset++) {
+      for (int offset = 0; offset < TRACKS; offset++) {
         validTrack[offset] = true;
       }
     }
@@ -396,19 +424,19 @@ public class DiskII {
     public void read(int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles) {
       int seekLoc = track << 12; /* 4K per DOS track (16 sectors of 256 bytes) */
       /* read 4K from file starting at offset into workBuffer */
-      for (int i=0; i < 4096; i++) {
+      for (int i = 0; i < 4096; i++) {
         workBuffer[i] = myData[seekLoc++];
       }
       nibbles[0] = nibblizeTrack(trackImageBuffer, 1, track);
     }
 
     public void write(int track, int quarterTrack, byte[] trackImageBuffer, int[] nibbles) {
-      for (int i=0; i < 4096; i++) {
+      for (int i = 0; i < 4096; i++) {
         workBuffer[i] = 0;
       }
       denibblizeTrack(trackImageBuffer, 1, nibbles[0]);
       int seekLoc = track << 12;
-      for (int i=0; i < 4096; i++) {
+      for (int i = 0; i < 4096; i++) {
         myData[seekLoc++] = workBuffer[i];
       }
       needsSave = true;
@@ -417,7 +445,7 @@ public class DiskII {
     public void close() {
       if (needsSave) {
         String fileName = System.currentTimeMillis() + ".dsk";
-          /*
+        /*
         System.out.println("Saving disk:" + fileName);
         try {
           FileOutputStream os = new FileOutputStream(fileName);
@@ -443,16 +471,16 @@ public class DiskII {
     if ((address & 1) != 0) {
       int phase = (address >> 1) & 3;
       int direction = 0;
-      if (phase == ((f.phase+1) & 3)) {
+      if (phase == ((f.phase + 1) & 3)) {
         direction = 1;
       }
-      if (phase == ((f.phase+3) & 3)) {
+      if (phase == ((f.phase + 3) & 3)) {
         direction = -1;
       }
       if (direction != 0) {
         f.phase = Math.max(0, Math.min(79, f.phase + direction));
         if ((f.phase & 1) == 0) {
-          int newTrack = Math.min(TRACKS-1, f.phase >> 1);
+          int newTrack = Math.min(TRACKS - 1, f.phase >> 1);
           if (newTrack != f.track) {
             if ((f.trackImage != null) && f.trackImageDirty) {
               writeTrack(curDrive);
@@ -475,7 +503,8 @@ public class DiskII {
     return 0;
   }
 
-  public void diskInsert(int drive, String name, byte[] data, boolean writeProtected, boolean createIfNecessary) {
+  public void diskInsert(
+      int drive, String name, byte[] data, boolean writeProtected, boolean createIfNecessary) {
     DosOrderImage di = new DosOrderImage(data);
     Floppy f = floppy[drive];
     if (f.diskData != null) {
@@ -523,9 +552,10 @@ public class DiskII {
   }
 
   public int diskSetLatchValue(int what, boolean write) {
-    if (write) floppyLatch = (byte)what;
+    if (write) floppyLatch = (byte) what;
     return floppyLatch;
   }
+
   public int diskSetReadMode() {
     floppyWriteMode = false;
     return Apple2e.randomData(floppy[curDrive].writeProtected);

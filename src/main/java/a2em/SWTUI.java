@@ -55,32 +55,35 @@ public class SWTUI extends Canvas implements Runnable {
     hiresBuf = image.getImageData();
     image.dispose();
 
-    addListener(SWT.KeyDown, new Listener() {
-      public void handleEvent(Event event) {
-        int lastKey = event.character;
-        boolean shiftDown = (event.stateMask & SWT.SHIFT) != 0;
-        if (lastKey == '\n') lastKey = 0x0d;
-        if (lastKey == 8) lastKey = 0x7f;
-        if ((lastKey <= 0) || (lastKey > 0xff)) {
-          lastKey = 0;
-        } else {
-          lastKey |= 0x80;
-        }
-        a2.lastKey = lastKey;
-        a2.shiftDown = shiftDown;
-      }
-    });
-    addListener(SWT.Paint, new Listener() {
-      public void handleEvent(Event event) {
-        drawScreen(event.gc);
-      }
-    });
+    addListener(
+        SWT.KeyDown,
+        new Listener() {
+          public void handleEvent(Event event) {
+            int lastKey = event.character;
+            boolean shiftDown = (event.stateMask & SWT.SHIFT) != 0;
+            if (lastKey == '\n') lastKey = 0x0d;
+            if (lastKey == 8) lastKey = 0x7f;
+            if ((lastKey <= 0) || (lastKey > 0xff)) {
+              lastKey = 0;
+            } else {
+              lastKey |= 0x80;
+            }
+            a2.lastKey = lastKey;
+            a2.shiftDown = shiftDown;
+          }
+        });
+    addListener(
+        SWT.Paint,
+        new Listener() {
+          public void handleEvent(Event event) {
+            drawScreen(event.gc);
+          }
+        });
   }
 
   public Point computeSize(int wHint, int hHint, boolean changed) {
     return new Point(280, 192);
   }
-
 
   private void text80Mode(GC gc) {
     int b;
@@ -91,9 +94,9 @@ public class SWTUI extends Canvas implements Runnable {
     /* It appears you cannot use video page 2 in 80 column mode */
     //          page = (videoPage == VIDEOPAGE1) ? 0x400 : 0x800;
     page = 0x400;
-    for (int row=0; row < graphicsOffset.length; row++) {
+    for (int row = 0; row < graphicsOffset.length; row++) {
       baseAddr = graphicsOffset[row] & 0xfff | page;
-      for (int col=0; col < 40; col++) {
+      for (int col = 0; col < 40; col++) {
         b = a2.mem[baseAddr + col];
         if (b < 64) {
           src = charRomInverse;
@@ -105,15 +108,16 @@ public class SWTUI extends Canvas implements Runnable {
         if (a2.useAltCharSet) {
           src = charAltRom;
         }
-        gc.drawImage(src,
-            b*8,          /* src x origin  */
-            0,            /* src y origin  */
-            7,            /* src width     */
-            8,            /* src height    */
+        gc.drawImage(
+            src,
+            b * 8, /* src x origin  */
+            0, /* src y origin  */
+            7, /* src width     */
+            8, /* src height    */
             col * 14 + 7, /* dest x origin */
-            row * 8,      /* dest y origin */
-            7,            /* dest width    */
-            8);           /* dest height   */
+            row * 8, /* dest y origin */
+            7, /* dest width    */
+            8); /* dest height   */
         b = a2.auxMem[baseAddr + col];
         if (b < 64) {
           src = charRomInverse;
@@ -125,7 +129,7 @@ public class SWTUI extends Canvas implements Runnable {
         if (a2.useAltCharSet) {
           src = charAltRom;
         }
-        gc.drawImage(src, b*8, 0, 7, 8, col * 14, row * 8, 7, 8);
+        gc.drawImage(src, b * 8, 0, 7, 8, col * 14, row * 8, 7, 8);
       }
     }
   }
@@ -141,9 +145,9 @@ public class SWTUI extends Canvas implements Runnable {
       return;
     }
     page = (a2.videoPage == Apple2e.VIDEOPAGE1) ? 0x400 : 0x800;
-    for (int row=0; row < graphicsOffset.length; row++) {
+    for (int row = 0; row < graphicsOffset.length; row++) {
       baseAddr = graphicsOffset[row] & 0xfff | page;
-      for (int col=0; col < 40; col++) {
+      for (int col = 0; col < 40; col++) {
         b = a2.mem[baseAddr + col];
         if (b < 64) {
           src = charRomInverse;
@@ -155,15 +159,10 @@ public class SWTUI extends Canvas implements Runnable {
         if (a2.useAltCharSet) {
           src = charAltRom;
         }
-        gc.drawImage(src,
-            b*8,   /* src x origin  */
-            0,     /* src y origin  */
-            7,     /* src width     */
-            8,     /* src height    */
-            col*7, /* dest x origin */
-            row*8, /* dest y origin */
-            7,     /* dest width    */
-            8);    /* dest height   */
+        gc.drawImage(
+            src, b * 8, /* src x origin  */ 0, /* src y origin  */ 7, /* src width     */
+            8, /* src height    */ col * 7, /* dest x origin */ row * 8, /* dest y origin */
+            7, /* dest width    */ 8); /* dest height   */
       }
     }
   }
@@ -174,28 +173,30 @@ public class SWTUI extends Canvas implements Runnable {
     int baseAddr;
 
     page = (a2.videoPage == Apple2e.VIDEOPAGE1) ? 0x400 : 0x800;
-    for (int row=0; row < graphicsOffset.length; row++) {
+    for (int row = 0; row < graphicsOffset.length; row++) {
       baseAddr = graphicsOffset[row] & 0xfff | page;
-      for (int col=0; col < 40; col++) {
+      for (int col = 0; col < 40; col++) {
         b = a2.mem[baseAddr + col];
-        gc.setBackground(loresColor[b&15]);
-        gc.fillRectangle(col*7, row*8, 7, 4);
+        gc.setBackground(loresColor[b & 15]);
+        gc.fillRectangle(col * 7, row * 8, 7, 4);
         gc.setBackground(loresColor[(b >> 4) & 15]);
-        gc.fillRectangle(col*7, row*8+4, 7, 4);
+        gc.fillRectangle(col * 7, row * 8 + 4, 7, 4);
       }
     }
   }
 
-  private static final int graphicsOffset[] = new int[] {
-    0x2000, 0x2080, 0x2100, 0x2180, 0x2200, 0x2280, 0x2300, 0x2380,
-    0x2028, 0x20a8, 0x2128, 0x21a8, 0x2228, 0x22a8, 0x2328, 0x23a8,
-    0x2050, 0x20d0, 0x2150, 0x21d0, 0x2250, 0x22d0, 0x2350, 0x23d0,
-  };
+  private static final int graphicsOffset[] =
+      new int[] {
+        0x2000, 0x2080, 0x2100, 0x2180, 0x2200, 0x2280, 0x2300, 0x2380,
+        0x2028, 0x20a8, 0x2128, 0x21a8, 0x2228, 0x22a8, 0x2328, 0x23a8,
+        0x2050, 0x20d0, 0x2150, 0x21d0, 0x2250, 0x22d0, 0x2350, 0x23d0,
+      };
 
   private static final boolean useColor = true;
+
   private void hiresMode(GC gc) {
-    int x=0;
-    int y=0;
+    int x = 0;
+    int y = 0;
     int baseAddr;
     int k;
     int page;
@@ -203,15 +204,15 @@ public class SWTUI extends Canvas implements Runnable {
     boolean evenBit = true;
     boolean lastBitSet = false;
     page = (a2.videoPage == Apple2e.VIDEOPAGE1) ? 0 : 0x2000;
-    for (int segment=0; segment < graphicsOffset.length; segment++) {
+    for (int segment = 0; segment < graphicsOffset.length; segment++) {
       baseAddr = graphicsOffset[segment] + page;
-      for (int i=0; i < 8; i++) {
-        x=0;
+      for (int i = 0; i < 8; i++) {
+        x = 0;
         evenBit = true;
-        for (int j=0; j < 40; j++) {
-          int curByte = a2.mem[baseAddr+j];
+        for (int j = 0; j < 40; j++) {
+          int curByte = a2.mem[baseAddr + j];
           bitShift = (curByte & 0x80) != 0;
-          for (int bit=0; bit < 7; bit++) {
+          for (int bit = 0; bit < 7; bit++) {
             if (useColor) {
               if ((curByte & 0x1) != 0) {
                 if (lastBitSet) {
@@ -231,7 +232,7 @@ public class SWTUI extends Canvas implements Runnable {
                     }
                   }
                 }
-                hiresBuf.setPixel(x+1, y, k);
+                hiresBuf.setPixel(x + 1, y, k);
                 hiresBuf.setPixel(x, y, k);
                 lastBitSet = true;
               } else {
@@ -273,7 +274,7 @@ public class SWTUI extends Canvas implements Runnable {
         hiresMode(gc);
       }
       if ((a2.screenMode & Apple2e.MIXEDMODE) != 0) {
-        gc.setClipping(0, 20*8, 280, 192);
+        gc.setClipping(0, 20 * 8, 280, 192);
         textMode(gc);
       }
     }
@@ -284,7 +285,7 @@ public class SWTUI extends Canvas implements Runnable {
 
     a2.run();
     redraw();
-    int napTime = Math.max(1, (int)(a2.emuPeriod - System.currentTimeMillis() + startTime));
+    int napTime = Math.max(1, (int) (a2.emuPeriod - System.currentTimeMillis() + startTime));
     getDisplay().timerExec(napTime, this);
   }
 

@@ -51,10 +51,6 @@ public class Apple2e implements M6502.Memory {
   public boolean shiftDown;
   public int screenMode;
 
-  //    private static final int sectorMap[] = {
-  //            0x0, 0x7, 0xE, 0x6, 0xD, 0x5, 0xC, 0x4,
-  //            0xB, 0x3, 0xA, 0x2, 0x9, 0x1, 0x8, 0xF };
-
   private void err(String s) {
     hitError = true;
     System.err.println(s);
@@ -84,89 +80,6 @@ public class Apple2e implements M6502.Memory {
       }
     }
   }
-
-  //    private void diskEntryPoint() {
-  //            try {
-  // //         System.out.println("Booting Disk");
-  //            /* Read 256 bytes from disk to $0800, JMP $0801 */
-  //            FileInputStream is = new FileInputStream(diskFile);
-  //            for (int i=0x800; i < 0x900; i++) {
-  //                    write(i, is.read());
-  //            }
-  //            is.close();
-  //            } catch (Exception e) { e.printStackTrace(); }
-  //            write(0x26, 0);
-  //            write(0x27, 9);
-  //            write(0x2b,  6*16);
-  //            cpu.jumpTo(0x801);
-  //    }
-  //
-  //    private void loadTrackAndSector() {
-  //            int track = read(0x41);
-  //            int sector = sectorMap[read(0x3d)];
-  //            int startByte = (track * 16 * 256) + (sector * 256);
-  //            int where = read(0x27)*256 + read(0x26);
-  //            try {
-  //            FileInputStream is = new FileInputStream(diskFile);
-  //            while (startByte > 0) {
-  //                    is.read();
-  //                    startByte--;
-  //            }
-  //            for (int i=where; i < where+256; i++) {
-  //                    write(i, is.read());
-  //            }
-  //            is.close();
-  // //         System.out.println("Loaded track " + track + " sector " + sector + " to " + where);
-  //            } catch (Exception e) { e.printStackTrace(); }
-  //            write(0x26, 0);
-  //            write(0x27, read(0x27)+1);
-  //            cpu.jumpTo(0x801);
-  //    }
-  //
-  //    private void rwts() {
-  //            write(0x48,  cpu.y);
-  //            write(0x49, cpu.a);
-  //            write(0x6f8, 2);
-  //            write(0x4f8, 4);
-  //            int iobuf = read(0x49) * 256 + read(0x48);
-  //            int command = read(iobuf + 12);
-  //            int track = read(iobuf + 4);
-  //            int sector = read(iobuf + 5);
-  //            int membuf = read(iobuf+9) * 256 + read(iobuf+8);
-  //            int memend = membuf + 256;
-  //            switch (command) {
-  //            case 0:
-  //                    System.out.println("rwts: ignoring seek");
-  //                    break;
-  //            case 1:
-  // //                 System.out.println("rtws: track " + track + " sector " + sector);
-  //                    try {
-  //                            FileInputStream is = new FileInputStream(diskFile);
-  //                            int startByte = track * 16 * 256 + sector * 256;
-  //                            while (startByte > 0) {
-  //                                    is.read();
-  //                                    startByte--;
-  //                            }
-  //                            for (int i=membuf; i < memend; i++) {
-  //                                    write(i, is.read());
-  //                            }
-  //                            is.close();
-  //                    } catch (Exception e) { e.printStackTrace(); }
-  //                    break;
-  //            case 2:
-  //                    System.out.println("rwts: ignoring write");
-  //                    break;
-  //            case 4:
-  //                    System.out.println("rwts: ignoring format");
-  //                    break;
-  //            default:
-  //                    err("rwts: unknown command " + command);
-  //                    break;
-  //            }
-  //            cpu.a = 0;
-  //            cpu.doCLC(0);
-  //            cpu.doRTS(0);
-  //    }
 
   public Apple2e() {
     hitError = false;
@@ -420,16 +333,6 @@ public class Apple2e implements M6502.Memory {
         return disk.diskSetReadMode();
       case 0xc0ef:
         return disk.diskSetWriteMode();
-        //                case 0xc100:
-        //                case 0xc200:
-        //                case 0xc300:
-        //                case 0xc400:
-        //                case 0xc500:
-        //                case 0xc600:
-        //                case 0xc700:
-        //                        /* Slot ROM entry points */
-        //                        System.out.println("Slot entry point");
-        //                        return 96; /* RTS */
       case 0xcfff:
         /* Clear all the slot ROM bank switching */
         return 0;

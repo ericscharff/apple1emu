@@ -91,8 +91,6 @@ public class SWTUI extends Canvas implements Runnable {
     int baseAddr;
     Image src = null;
 
-    /* It appears you cannot use video page 2 in 80 column mode */
-    //          page = (videoPage == VIDEOPAGE1) ? 0x400 : 0x800;
     page = 0x400;
     for (int row = 0; row < graphicsOffset.length; row++) {
       baseAddr = graphicsOffset[row] & 0xfff | page;

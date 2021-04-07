@@ -712,7 +712,6 @@ public class M6502 {
   }
 
   private void doBRK(int mode) {
-    //          fetch();
     halt = true;
     interrupt(true);
   }

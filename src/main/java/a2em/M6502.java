@@ -41,12 +41,12 @@ public class M6502 {
     public void write(int where, int what);
   }
 
-  public int a;       // 8-bit
-  public int x;       // 8-bit
-  public int y;       // 8-bit
-  public int pc;      // 16-bit
-  private int sp;     // 8-bit
-  private int flags;  // 8-bit
+  public int a;
+  public int x;
+  public int y;
+  public int pc;
+  private int sp;
+  private int flags;
   private Memory mem;
   public boolean halt;
   private static final int PCBUF = 10;

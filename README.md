@@ -6,7 +6,7 @@ needed to run the emulator, as well as sample disks.
 
 To build, and run, use gradle:
 
-```
+```bash
 ./gradlew run
 ```
 

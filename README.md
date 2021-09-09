@@ -11,3 +11,5 @@ To build, and run, use gradle:
 ```
 
 You may need to update the SWT dependency for the architecture you are using.
+This can be accomplished by editing `build.gradle` and including the proper
+depedencies.

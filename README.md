@@ -10,6 +10,10 @@ To build, and run, use gradle:
 ./gradlew run
 ```
 
+Disks used by the emulator are stored as resources. See
+`src/main/resources/resources/apple2.properties`. Disks must be in DOS order
+(even if they are ProDOS).
+
 You may need to update the SWT dependency for the architecture you are using.
 This can be accomplished by editing `build.gradle` and including the proper
 depedencies.

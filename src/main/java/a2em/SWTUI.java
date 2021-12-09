@@ -16,7 +16,7 @@ import org.eclipse.swt.widgets.Shell;
 
 public class SWTUI extends Canvas implements Runnable {
   private Image charRom;
-  private Image charAltRom;
+  private Image altCharRom;
   private Image charRomInverse;
   private Image charRomFlash;
   private ImageData hiresBuf;
@@ -29,7 +29,7 @@ public class SWTUI extends Canvas implements Runnable {
     Display d = getDisplay();
     ResourceHelper helper = new ResourceHelper();
     charRom = helper.loadImageResource(d, "image.charset");
-    charAltRom = helper.loadImageResource(d, "image.charset.alt");
+    altCharRom = helper.loadImageResource(d, "image.charset.alt");
     charRomInverse = helper.loadImageResource(d, "image.charset");
     charRomFlash = helper.loadImageResource(d, "image.charset");
 
@@ -104,7 +104,7 @@ public class SWTUI extends Canvas implements Runnable {
           src = charRom;
         }
         if (a2.useAltCharSet) {
-          src = charAltRom;
+          src = altCharRom;
         }
         gc.drawImage(
             src,
@@ -125,7 +125,7 @@ public class SWTUI extends Canvas implements Runnable {
           src = charRom;
         }
         if (a2.useAltCharSet) {
-          src = charAltRom;
+          src = altCharRom;
         }
         gc.drawImage(src, b * 8, 0, 7, 8, col * 14, row * 8, 7, 8);
       }
@@ -155,7 +155,7 @@ public class SWTUI extends Canvas implements Runnable {
           src = charRom;
         }
         if (a2.useAltCharSet) {
-          src = charAltRom;
+          src = altCharRom;
         }
         gc.drawImage(
             src, b * 8, /* src x origin  */ 0, /* src y origin  */ 7, /* src width     */

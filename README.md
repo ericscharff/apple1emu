@@ -5,6 +5,18 @@ Apple ][ plus, and Apple //e. This particular repository only includes the Apple
 needed to run the emulator, as well as sample disks.
 
 To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
+To build, and run, use gradle:
 
 ```bash
 ./gradlew run

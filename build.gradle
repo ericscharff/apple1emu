@@ -5,7 +5,7 @@ repositories {
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'a2em.SWTUI'
+mainClassName = 'a2em.Apple1'
 
 dependencies {
 // Uncomment one of the following lines for your specific platform

@@ -57,7 +57,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
 		cpu = new M6502(this, 0xff00);
 		
                 ResourceHelper resources = new ResourceHelper();
-                int[] bios = resources.loadBinaryResource("apple1.rom", 256);
+                int[] bios = resources.loadBinaryResource("rom.apple", 256);
                 int a = 0xff00;
                 for (int i=0; i < 256; i++) {
                   mem[a] = bios[i];

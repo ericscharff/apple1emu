@@ -11,13 +11,11 @@ package a2em;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 
 public class ResourceHelper {
   private ResourceBundle resourceBundle;
 
-  private void warn(String s) {
+  protected void warn(String s) {
     System.err.println(s);
   }
 
@@ -43,26 +41,8 @@ public class ResourceHelper {
     return getClass().getResource(makeResourceName(resourceName));
   }
 
-  private InputStream findResourceAsStream(String resourceName) {
+  protected InputStream findResourceAsStream(String resourceName) {
     return getClass().getResourceAsStream(makeResourceName(resourceName));
-  }
-
-  public Image loadImageResource(Display display, String resourceName) {
-    InputStream is = findResourceAsStream(resourceName);
-    if (is == null) {
-      warn("Could not find resource: " + resourceName);
-      return null;
-    } else {
-      try {
-        return new Image(display, is);
-      } finally {
-        try {
-          is.close();
-        } catch (Exception ex) {
-          ex.printStackTrace();
-        }
-      }
-    }
   }
 
   public int[] loadBinaryResource(String name, int size) {

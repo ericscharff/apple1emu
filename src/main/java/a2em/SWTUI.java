@@ -35,7 +35,7 @@ public class SWTUI extends Canvas implements Runnable {
     super(parent, style);
     a2 = apple;
     Display d = getDisplay();
-    ResourceHelper helper = new ResourceHelper();
+    SWTResourceHelper helper = new SWTResourceHelper();
     charRom = helper.loadImageResource(d, "image.charset");
     altCharRom = helper.loadImageResource(d, "image.charset.alt");
     charRomInverse = helper.loadImageResource(d, "image.charset");

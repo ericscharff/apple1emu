@@ -92,19 +92,6 @@ public class Apple1 extends JComponent implements M6502.Memory {
               }
             }
             return;
-          case KeyEvent.VK_F3:
-            // Dump E000-EFFF
-            try {
-              java.io.FileOutputStream os = new java.io.FileOutputStream("/tmp/a1");
-              int i = 0xe000;
-              while (i < 0xf000) {
-                os.write(mem[i++]);
-              }
-              os.close();
-            } catch (Exception ex) {
-              ex.printStackTrace();
-            }
-            return;
         }
         lastKey = (int) Character.toUpperCase(e.getKeyChar());
         if (lastKey == '\n')

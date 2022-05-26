@@ -497,7 +497,7 @@ public class M6502 {
   }
 
   private void doPHP(int mode) {
-    flags |= rFlag;
+    flags |= rFlag | bFlag;
     pushByte(flags);
   }
 
@@ -706,8 +706,8 @@ public class M6502 {
   private void interrupt(boolean isBRK) {
     pushWord(pc);
     setB(isBRK);
-    doPHP(mImplied);
     setI(true);
+    pushByte(flags);
     pc = wordAt(0xfffe);
   }
 

@@ -1,3 +1,5 @@
+# Apple 1 Emulator in Java
+
 This repository formerly hosted an Apple2e emulator written in Java, with its
 GUI utilizing the SWT library. The Apple //e emulator still exists in the
 history of this repository, under the `last-a2-emu` tag. The current version has

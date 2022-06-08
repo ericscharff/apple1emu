@@ -6,7 +6,7 @@
    There is NO WARRANTY for this software.  See LICENSE.txt for
    details. */
 
-package a2em;
+package a1em;
 
 import java.io.InputStream;
 import java.net.URL;

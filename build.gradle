@@ -5,4 +5,4 @@ repositories {
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'a2em.Apple1'
+mainClassName = 'a1em.Apple1'

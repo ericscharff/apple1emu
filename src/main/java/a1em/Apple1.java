@@ -224,7 +224,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
 
   public static void main(String args[]) {
     Apple1 me = new Apple1();
-    JFrame f = new JFrame("Apple1");
+    JFrame f = new JFrame("Apple 1");
     f.getContentPane().setLayout(new BorderLayout());
     f.getContentPane().add(me);
     f.pack();

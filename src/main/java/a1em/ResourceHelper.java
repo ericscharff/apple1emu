@@ -20,7 +20,7 @@ public class ResourceHelper {
   }
 
   public ResourceHelper() {
-    resourceBundle = ResourceBundle.getBundle("resources.apple1");
+    resourceBundle = ResourceBundle.getBundle("resources.apple1.files");
   }
 
   public String getProperty(String propName) {

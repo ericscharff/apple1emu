@@ -57,7 +57,7 @@ public class M6502 {
   private int flags;
   private Memory mem;
   public boolean halt;
-  private static final int PCBUF = 100;
+  private static final int PCBUF = 10;
   private int[] pcbuf;
   private int pcbufptr;
   public boolean dumping;

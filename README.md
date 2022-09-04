@@ -6,7 +6,7 @@ This repository formerly hosted an Apple2e emulator written in Java, with its
 GUI utilizing the SWT library. The Apple //e emulator still exists in the
 history of this repository, under the `last-a2-emu` tag. The current version has
 no external dependencies other that what is in the J2SE distribution, although
-it uses JFC / Swing to simplify keyboard input.
+it uses Swing to simplify keyboard input.
 
 What remains is a generic 6502 emulator, and a rudimentary Apple 1 emulator. The
 Apple 1 emulator relies on Swing (because handling raw console I/O is
@@ -36,7 +36,7 @@ other than an I/O port can be used as RAM.
 When the emulator starts up, a Java Swing UI window opens up. The output from
 the Apple 1 appears in the terminal that stared, not in the window that opens.
 To use the emulator, _by sure to focus the window._ The reason for this is that
-Java does not accept raw terminal input, so instead, the JFC window is what
+Java does not accept raw terminal input, so instead, the Swing window is what
 handles input (although all output appears in the terminal.)
 
 If all goes well, you are greeted with a backslash ("\"), a prompt that the

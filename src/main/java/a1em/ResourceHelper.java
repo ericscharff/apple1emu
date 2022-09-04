@@ -50,9 +50,9 @@ public class ResourceHelper {
     InputStream is = findResourceAsStream(name);
     try {
       int b;
-      int idx = 0;
+      int i = 0;
       while ((b = is.read()) >= 0) {
-        r[idx++] = b;
+        r[i++] = b;
       }
     } catch (Exception ex) {
       ex.printStackTrace();

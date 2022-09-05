@@ -1598,7 +1598,7 @@ public class M6502 {
     StringBuffer b = new StringBuffer();
 
     //          dumpHexByte(b, mem.read(where));
-    b.append(codeTable[mem.read(where)]);
+    b.append(mneumonics[mem.read(where)]);
 
     switch (modeTable[mem.read(where)]) {
       case mIndirectX:
@@ -1671,7 +1671,7 @@ public class M6502 {
     return b.toString();
   }
 
-  private static String codeTable[] = {
+  private static String mneumonics[] = {
     "BRK", "ORA", "???", "???", "TSB", "ORA", "ASL", "???",
     "PHP", "ORA", "ASL", "???", "TSB", "ORA", "ASL", "???",
     "BPL", "ORA", "ORA", "???", "TRB", "ORA", "ASL", "???",

@@ -48,27 +48,27 @@ Memory can be examined by typing an address, or a range of addresses. Typing a
 single address shows its contents, and typing two addressses separated by a
 dot (".") shows a range of memory, e.g.:
 
-```
+<pre>
 \
 
-# Print a single location
-FFF0
+<i># Print a single location</i>
+<b>FFF0</b>
 
 FFF0: 12
-FFE0
+<b>FFE0</b>
 
 FFE0: 4A
-FFE1
+<b>FFE1</b>
 
 FFE1: 20
 
-# Print a range from start.end, inclusive
-FFE0.FFF0
+<i># Print a range from start.end, inclusive</i>
+<b>FFE0.FFF0</b>
 
 FFE0: 4A 20 E5 FF 68 29 0F 09
 FFE8: B0 C9 BA 90 02 69 06 2C
 FFF0: 12
-```
+</pre>
 
 Memory can be set in the same form that the monitor display is. For example, you
 can set a single location in memory with a colon:
@@ -100,4 +100,3 @@ display a block of RAM, save it to a text file, and then load it later.
 ### Quitting the Emulator
 
 To exit the emulator, close the Swing window.
-

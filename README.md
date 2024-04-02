@@ -33,7 +33,7 @@ should be read-only, but it is editable just like any other RAM. The original
 Apple 1 also has limits to available RAM, but essentially any memory address
 other than an I/O port can be used as RAM.
 
-When the emulator starts up, a Java Swing UI window opens up. The output from
+When the emulator starts, a Java Swing UI window opens up. The output from
 the Apple 1 appears in the terminal that stared, not in the window that opens.
 To use the emulator, _by sure to focus the window._ The reason for this is that
 Java does not accept raw terminal input, so instead, the Swing window is what

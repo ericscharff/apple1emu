@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileInputStream;
 import javax.swing.JComponent;
@@ -27,6 +26,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
     System.out.println(cpu.dump());
     System.exit(1);
   }
+
   private static void warn(String s) {
     System.err.println(s);
   }
@@ -77,43 +77,46 @@ public class Apple1 extends JComponent implements M6502.Memory {
       mem[a] = bios[i];
       a++;
     }
-    addKeyListener(new KeyAdapter() {
-      public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-          case KeyEvent.VK_F1:
-            // Load file into keyboard buffer
-            {
-              JFileChooser fc = new JFileChooser();
-              int returnVal = fc.showOpenDialog(Apple1.this);
-              if (returnVal == JFileChooser.APPROVE_OPTION) {
-                fillKeyBuf(fc.getSelectedFile());
-              }
+    addKeyListener(
+        new KeyAdapter() {
+          public void keyPressed(KeyEvent e) {
+            switch (e.getKeyCode()) {
+              case KeyEvent.VK_F1:
+                // Load file into keyboard buffer
+                {
+                  JFileChooser fc = new JFileChooser();
+                  int returnVal = fc.showOpenDialog(Apple1.this);
+                  if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    fillKeyBuf(fc.getSelectedFile());
+                  }
+                }
+                return;
+              case KeyEvent.VK_F2:
+                // Load Binary at 300H
+                {
+                  JFileChooser fc = new JFileChooser();
+                  int returnVal = fc.showOpenDialog(Apple1.this);
+                  if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    loadBinary(fc.getSelectedFile(), 0x300);
+                  }
+                }
+                return;
             }
-            return;
-          case KeyEvent.VK_F2:
-            // Load Binary at 300H
-            {
-              JFileChooser fc = new JFileChooser();
-              int returnVal = fc.showOpenDialog(Apple1.this);
-              if (returnVal == JFileChooser.APPROVE_OPTION) {
-                loadBinary(fc.getSelectedFile(), 0x300);
-              }
+            lastKey = (int) Character.toUpperCase(e.getKeyChar());
+            if (lastKey == '\n') lastKey = 0x0d;
+            if ((lastKey < 0) || (lastKey > 255)) {
+              lastKey = 0;
             }
-            return;
-        }
-        lastKey = (int) Character.toUpperCase(e.getKeyChar());
-        if (lastKey == '\n')
-          lastKey = 0x0d;
-        if ((lastKey < 0) || (lastKey > 255)) {
-          lastKey = 0;
-        }
-      }
-    });
-    new Timer(1000 / 6, new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        run();
-      }
-    }).start();
+          }
+        });
+    new Timer(
+            1000 / 6,
+            new ActionListener() {
+              public void actionPerformed(ActionEvent e) {
+                run();
+              }
+            })
+        .start();
   }
 
   private int doIO(int where) {
@@ -128,8 +131,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
         } else {
           k = keyBuf[keyBufIndex];
           keyBufIndex++;
-          if (keyBufIndex == keyBuf.length)
-            keyBuf = null;
+          if (keyBufIndex == keyBuf.length) keyBuf = null;
         }
         lastKey = k;
       }
@@ -171,8 +173,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
     } else if ((where == 0xd0f2) || (where == 0xd012)) {
       /* Display output */
       char ch = (char) (what & 0x7f);
-      if (ch == '\r')
-        ch = '\n';
+      if (ch == '\r') ch = '\n';
       System.out.print(ch);
       System.out.flush();
       lastOut = what;
@@ -186,15 +187,12 @@ public class Apple1 extends JComponent implements M6502.Memory {
   }
 
   public int read(int where) {
-    if (cpu.dumping)
-      return mem[where];
+    if (cpu.dumping) return mem[where];
     if ((where == 0) || (where == 1)) {
       warn("Read from " + where);
     }
-    if ((where >= 0xd000) && (where < 0xe000))
-      return doIO(where);
-    if ((where < 0) || (where > 65536))
-      err("Read out of range: " + where);
+    if ((where >= 0xd000) && (where < 0xe000)) return doIO(where);
+    if ((where < 0) || (where > 65536)) err("Read out of range: " + where);
     return mem[where];
   }
 
@@ -206,10 +204,8 @@ public class Apple1 extends JComponent implements M6502.Memory {
       doIO(where, what);
       return;
     }
-    if ((where < 0) || (where > 65536))
-      err("Write out of range: " + where);
-    if ((what < 0) || (what > 256))
-      err("Write value out of range: " + what);
+    if ((where < 0) || (where > 65536)) err("Write out of range: " + where);
+    if ((what < 0) || (what > 256)) err("Write value out of range: " + what);
     mem[where] = what;
   }
 

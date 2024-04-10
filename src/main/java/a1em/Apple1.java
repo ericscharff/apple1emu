@@ -119,6 +119,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
         .start();
   }
 
+  // Read
   private int doIO(int where) {
     //		System.out.println("IO read" + Integer.toHexString(where));
     if (where == 0xd010) {
@@ -159,6 +160,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
     return 0;
   }
 
+  // Write
   private void doIO(int where, int what) {
     where &= 0xf00f;
     where |= 0x0010;

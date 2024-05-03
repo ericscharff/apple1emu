@@ -247,6 +247,7 @@ public class M6502 {
     return v;
   }
 
+  // CEA - shorthand for "contents of the effective address"
   private int cea(int mode) {
     int v = ea(mode);
     if (mode == mImmediate) {

@@ -1,4 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'application'
+plugins {
+  id 'application'
+}
 
-mainClassName = 'a1em.Apple1'
+application {
+  mainClass = 'a1em.Apple1'
+}

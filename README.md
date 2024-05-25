@@ -39,7 +39,7 @@ use the emulator, _by sure to focus the window._ The reason for this is that
 Java does not accept raw terminal input, so instead, the Swing window is what
 handles input (although all output appears in the terminal.)
 
-If all goes well, you are greeted with a backslash ("\"), a prompt that the
+If all goes well, you will be greeted with a backslash ("\"), a prompt that the
 Apple 1 is ready to accept input.
 
 ### Accessing Memory

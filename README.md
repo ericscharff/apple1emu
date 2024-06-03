@@ -100,3 +100,12 @@ display a block of RAM, save it to a text file, and then load it later.
 ### Quitting the Emulator
 
 To exit the emulator, close the Swing window.
+
+
+## Alternatives
+
+Before the Java implementation was written, I'd written an Apple I and 6502
+emulator in Oberon. I ported this to Oberon-07 and have also written an Oberon
+compiler, so my [oberon-compiler](https://github.com/ericscharff/oberon-compiler)
+repository has an Apple I emulator that uses the console without any Java GUI
+hacks, and compiles to a native platform binary.

@@ -9,8 +9,8 @@ details. */
 package a1em;
 
 public class M6502 {
-  public static final int zFlag = 0x02;
   public static final int cFlag = 0x01;
+  public static final int zFlag = 0x02;
   public static final int iFlag = 0x04;
   public static final int dFlag = 0x08;
   public static final int bFlag = 0x10;

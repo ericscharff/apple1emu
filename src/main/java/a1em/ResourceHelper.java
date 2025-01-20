@@ -1,4 +1,4 @@
-/* Copyright (c) 2007-2023, Eric Scharff
+/* Copyright (c) 2007-2025, Eric Scharff
 Permission to use, copy, modify, and/or distribute this software
 for any purpose with or without fee is hereby granted, provided
 that the above copyright notice and this permission notice appear

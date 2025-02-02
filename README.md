@@ -1,4 +1,4 @@
-# Apple 1 Emulator in Java (2025)
+# Apple 1 Emulator in Java
 
 ## Overview
 

@@ -109,4 +109,3 @@ emulator in Oberon. I ported this to Oberon-07 and have also written an Oberon
 compiler, so my [oberon-compiler](https://github.com/ericscharff/oberon-compiler)
 repository has an Apple I emulator that uses the console without any Java GUI
 hacks, and compiles to a native platform binary.
-Wed Apr  2 08:13:34 AM MDT 2025

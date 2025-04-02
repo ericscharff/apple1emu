@@ -16,8 +16,8 @@ import javax.swing.Timer;
 public class Apple1 extends JComponent implements M6502.Memory {
   private int[] mem;
   private static M6502 cpu;
-  private int lastOutput;
   private int lastKey;
+  private int lastOut;
   private char keyBuf[];
   private int keyBufIndex;
 
@@ -150,7 +150,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
     } else if ((where == 0xd0f2) || (where == 0xd012)) {
       /* Display output */
       /* bit 8 should always be low */
-      return lastOutput & 0x7f;
+      return lastOut & 0x7f;
     } else if (where == 0xd013) {
       /* Display status */
       warn("Read from display status");
@@ -178,7 +178,7 @@ public class Apple1 extends JComponent implements M6502.Memory {
       if (ch == '\r') ch = '\n';
       System.out.print(ch);
       System.out.flush();
-      lastOutput = what;
+      lastOut = what;
       return;
     } else if (where == 0xd013) {
       /* Display status */

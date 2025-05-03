@@ -202,7 +202,7 @@ public class M6502 {
 
     switch (mode) {
       case mIndirectX:
-        v = wordAt(fetch() + x);
+        v = wordAt((fetch() + x) & 0xff);
         break;
       case mZeroPage:
         v = fetch();

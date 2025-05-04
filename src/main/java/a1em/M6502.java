@@ -721,8 +721,11 @@ public class M6502 {
   }
 
   private void doBRK(int mode) {
-    halt = true;
-    interrupt(true);
+    pushWord(pc + 1);
+    setB(true);
+    doPHP(0);
+    setI(true);
+    pc = wordAt(0xfffe);
   }
 
   public void step() {

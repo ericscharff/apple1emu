@@ -57,10 +57,6 @@ public class M6502 {
   private int flags;
   private Memory mem;
   public boolean halt;
-  private static final int PCBUF = 10;
-  private int[] pcbuf;
-  private int pcbufptr;
-  public boolean dumping;
 
   public boolean bFlagSet() {
     return (flags & bFlag) != 0;
@@ -76,7 +72,6 @@ public class M6502 {
     pc = startPC;
     sp = 0xff;
     flags = rFlag;
-    pcbuf = new int[PCBUF];
   }
 
   private int complement(int x) {
@@ -729,8 +724,6 @@ public class M6502 {
   }
 
   public void step() {
-    pcbuf[pcbufptr] = pc;
-    pcbufptr = (pcbufptr + 1) % PCBUF;
     int i = fetch();
     switch (i) {
       case 0:
@@ -1506,16 +1499,8 @@ public class M6502 {
   }
 
   public String dump() {
-    dumping = true;
     StringBuffer b = new StringBuffer();
 
-    for (int i = 0; i < PCBUF; i++) {
-      pcbufptr = (pcbufptr + 1) % PCBUF;
-      dumpHexWord(b, pcbuf[pcbufptr]);
-      b.append("  ");
-      b.append(disassemble(pcbuf[pcbufptr]));
-      b.append('\n');
-    }
     b.append("PC = ");
     dumpHexWord(b, pc);
     b.append(" A = ");
@@ -1529,7 +1514,6 @@ public class M6502 {
     dumpFlags(b);
     b.append(' ');
     b.append(disassemble(pc));
-    dumping = false;
     return b.toString();
   }
 

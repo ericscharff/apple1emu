@@ -189,7 +189,6 @@ public class Apple1 extends JComponent implements M6502.Memory {
   }
 
   public int read(int where) {
-    if (cpu.dumping) return mem[where];
     if ((where == 0) || (where == 1)) {
       warn("Read from " + where);
     }

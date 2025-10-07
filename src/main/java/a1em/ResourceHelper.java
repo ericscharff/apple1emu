@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class ResourceHelper {
+
   private ResourceBundle resourceBundle;
 
   protected void warn(String s) {

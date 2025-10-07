@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 public class M6502Test {
+
   @Test
   public void runFunctionalTest() {
     ResourceHelper resources = new ResourceHelper();
@@ -14,6 +15,7 @@ public class M6502Test {
       public int read(int where) {
         return mem[where];
       }
+
       @Override
       public void write(int where, int what) {
         mem[where] = what;

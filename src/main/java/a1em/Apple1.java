@@ -14,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.Timer;
 
 public class Apple1 extends JComponent implements M6502.Memory {
+
   private int[] mem;
   private static M6502 cpu;
   private int lastKey;
@@ -78,45 +79,47 @@ public class Apple1 extends JComponent implements M6502.Memory {
       a++;
     }
     addKeyListener(
-        new KeyAdapter() {
-          public void keyPressed(KeyEvent e) {
-            switch (e.getKeyCode()) {
-              case KeyEvent.VK_F1:
-                // Load file into keyboard buffer
-                {
-                  JFileChooser fc = new JFileChooser();
-                  int returnVal = fc.showOpenDialog(Apple1.this);
-                  if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    fillKeyBuf(fc.getSelectedFile());
-                  }
+      new KeyAdapter() {
+        public void keyPressed(KeyEvent e) {
+          switch (e.getKeyCode()) {
+            case KeyEvent.VK_F1:
+              // Load file into keyboard buffer
+              {
+                JFileChooser fc = new JFileChooser();
+                int returnVal = fc.showOpenDialog(Apple1.this);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                  fillKeyBuf(fc.getSelectedFile());
                 }
-                return;
-              case KeyEvent.VK_F2:
-                // Load Binary at 300H
-                {
-                  JFileChooser fc = new JFileChooser();
-                  int returnVal = fc.showOpenDialog(Apple1.this);
-                  if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    loadBinary(fc.getSelectedFile(), 0x300);
-                  }
-                }
-                return;
-            }
-            lastKey = (int) Character.toUpperCase(e.getKeyChar());
-            if (lastKey == '\n') lastKey = 0x0d;
-            if ((lastKey < 0) || (lastKey > 255)) {
-              lastKey = 0;
-            }
-          }
-        });
-    new Timer(
-            1000 / 6,
-            new ActionListener() {
-              public void actionPerformed(ActionEvent e) {
-                run();
               }
-            })
-        .start();
+              return;
+            case KeyEvent.VK_F2:
+              // Load Binary at 300H
+              {
+                JFileChooser fc = new JFileChooser();
+                int returnVal = fc.showOpenDialog(Apple1.this);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                  loadBinary(fc.getSelectedFile(), 0x300);
+                }
+              }
+              return;
+          }
+          lastKey = (int) Character.toUpperCase(e.getKeyChar());
+          if (lastKey == '\n') lastKey = 0x0d;
+          if ((lastKey < 0) || (lastKey > 255)) {
+            lastKey = 0;
+          }
+        }
+      }
+    );
+    new Timer(
+      1000 / 6,
+      new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          run();
+        }
+      }
+    )
+      .start();
   }
 
   // Read

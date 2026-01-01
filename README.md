@@ -1,3 +1,5 @@
+# Happy 2026
+
 # Apple 1 Emulator in Java
 
 ## Overview

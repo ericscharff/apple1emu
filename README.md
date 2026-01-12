@@ -45,7 +45,7 @@ Apple 1 is ready to accept input.
 ### Accessing Memory
 
 Memory can be examined by typing an address, or a range of addresses. Typing a
-single address shows its contents, and typing two addressses separated by a dot
+single address shows its contents, and typing two addresses separated by a dot
 (".") shows a range of memory, e.g.:
 
 <pre>

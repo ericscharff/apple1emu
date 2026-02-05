@@ -5,19 +5,38 @@
 This repository formerly hosted an Apple2e emulator written in Java, with its
 GUI utilizing the SWT library. The Apple //e emulator still exists in the
 history of this repository, under the `last-a2-emu` tag. The current version has
-no external dependencies other that what is in the J2SE distribution, although
-it uses Swing to simplify keyboard input.
+no external dependencies other that what is in the J2SE distribution.
 
-What remains is a generic 6502 emulator, and a rudimentary Apple 1 emulator. The
-Apple 1 emulator relies on Swing (because handling raw console I/O is
-problematic in pure Java) but is intended to be a simple 6502 test bed.
+What remains is a generic 6502 emulator, and a rudimentary Apple 1 emulator.
+
+## Running
+
+Getting raw keyboard input in Java is a bit tricky, so there are two options:
+
+1. Run on a system with stty (recommended). If you run the main class
+   `a1em.Apple1`, it will read input from standard input and provide output on
+   standard output. This is strongly recommended because you can use the
+   emulator redirecting stdin or stdout, and it doesn't require any GUI. The
+   primary disadvantage is that it requires that the terminal be set to "raw"
+   mode (`stty raw -echo` on Linux systems) so that the emulator handles every
+   keystroke. Use the [run.sh](run.sh) script to properly set up the terminal,
+   and restore when the emulator exits. This probably will not work properly on
+   Windows.
+1. Use the Java Swing implementation. The `a1em.Apple1Swing` main class opens a
+   window. When that window is focused, input comes from that window into the
+   emulator (output still comes on standard output). This is a fallback if your
+   system doesn't support the `run.sh` script properly.
 
 ## Building
 
-To build, and run, use gradle:
+To build and run, use gradle:
 
 ```bash
-./gradlew run
+$ ./gradlew jar
+# If you can use the console version
+$ ./run.sh
+# If you need the swing version (probably Windows)
+$ java -cp ./build/libs/apple1emu.jar a1em.Apple1Swing
 ```
 
 ## Using the Apple 1
@@ -33,11 +52,15 @@ should be read-only, but it is editable just like any other RAM. The original
 Apple 1 also has limits to available RAM, but essentially any memory address
 other than an I/O port can be used as RAM.
 
-When the emulator starts, a Java Swing UI window opens up. The output from the
-Apple 1 appears in the terminal that stared, not in the window that opens. To
-use the emulator, _by sure to focus the window._ The reason for this is that
-Java does not accept raw terminal input, so instead, the Swing window is what
-handles input (although all output appears in the terminal.)
+If you ran using `run.sh`, you can type at your console and see the output
+directly. Hit `Ctrl-D` to exit the emulator.
+
+If you used the Swing version, when the emulator starts, a Java Swing UI window
+opens up. The output from the Apple 1 appears in the terminal that stared, not
+in the window that opens. To use the emulator, _by sure to focus the window._
+The reason for this is that Java does not accept raw terminal input, so instead,
+the Swing window is what handles input (although all output appears in the
+terminal.)
 
 If all goes well, you will be greeted with a backslash ("\"), a prompt that the
 Apple 1 is ready to accept input.
@@ -99,13 +122,13 @@ display a block of RAM, save it to a text file, and then load it later.
 
 ### Quitting the Emulator
 
-To exit the emulator, close the Swing window.
-
+To exit the emulator, press `Ctrl-D`, or close the Swing window.
 
 ## Alternatives
 
 Before the Java implementation was written, I'd written an Apple I and 6502
 emulator in Oberon. I ported this to Oberon-07 and have also written an Oberon
-compiler, so my [oberon-compiler](https://github.com/ericscharff/oberon-compiler)
-repository has an Apple I emulator that uses the console without any Java GUI
-hacks, and compiles to a native platform binary.
+compiler, so my
+[oberon-compiler](https://github.com/ericscharff/oberon-compiler) repository has
+an Apple I emulator that uses the console without any Java GUI hacks, and
+compiles to a native platform binary.

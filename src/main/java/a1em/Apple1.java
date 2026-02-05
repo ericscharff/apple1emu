@@ -1,26 +1,13 @@
 package a1em;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.FileInputStream;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.Timer;
+import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class Apple1 extends JComponent implements M6502.Memory {
+public class Apple1 implements M6502.Memory {
 
   private int[] mem;
   private static M6502 cpu;
-  private int lastKey;
-  private int lastOut;
-  private char keyBuf[];
-  private int keyBufIndex;
+  private static ConcurrentLinkedQueue<Integer> keyBuffer;
 
   private static void err(String s) {
     System.err.println(s);
@@ -32,44 +19,10 @@ public class Apple1 extends JComponent implements M6502.Memory {
     System.err.println(s);
   }
 
-  public Dimension getPreferredSize() {
-    return new Dimension(150, 150);
-  }
-
-  private void fillKeyBuf(File srcFile) {
-    try {
-      FileInputStream is = new FileInputStream(srcFile);
-      long len = srcFile.length();
-      keyBuf = new char[(int) len];
-      for (int i = 0; i < len; i++) {
-        keyBuf[i] = (char) is.read();
-        if (keyBuf[i] == '\n') {
-          keyBuf[i] = '\r';
-        }
-      }
-      is.close();
-      keyBufIndex = 0;
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  private void loadBinary(File srcFile, int where) {
-    try {
-      FileInputStream is = new FileInputStream(srcFile);
-      int c;
-      while ((c = is.read()) >= 0) {
-        mem[where++] = c;
-      }
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-  }
-
   public Apple1() {
-    super();
     mem = new int[65536];
     cpu = new M6502(this, 0xff00);
+    keyBuffer = new ConcurrentLinkedQueue<>();
 
     ResourceHelper resources = new ResourceHelper();
     int[] bios = resources.loadBinaryResource("rom.apple1", 256);
@@ -78,82 +31,27 @@ public class Apple1 extends JComponent implements M6502.Memory {
       mem[a] = bios[i];
       a++;
     }
-    addKeyListener(
-      new KeyAdapter() {
-        public void keyPressed(KeyEvent e) {
-          switch (e.getKeyCode()) {
-            case KeyEvent.VK_F1:
-              // Load file into keyboard buffer
-              {
-                JFileChooser fc = new JFileChooser();
-                int returnVal = fc.showOpenDialog(Apple1.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                  fillKeyBuf(fc.getSelectedFile());
-                }
-              }
-              return;
-            case KeyEvent.VK_F2:
-              // Load Binary at 300H
-              {
-                JFileChooser fc = new JFileChooser();
-                int returnVal = fc.showOpenDialog(Apple1.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                  loadBinary(fc.getSelectedFile(), 0x300);
-                }
-              }
-              return;
-          }
-          lastKey = (int) Character.toUpperCase(e.getKeyChar());
-          if (lastKey == '\n') lastKey = 0x0d;
-          if ((lastKey < 0) || (lastKey > 255)) {
-            lastKey = 0;
-          }
-        }
-      }
-    );
-    new Timer(
-      1000 / 6,
-      new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          run();
-        }
-      }
-    )
-      .start();
   }
 
   // Read
   private int doIO(int where) {
-    //		System.out.println("IO read" + Integer.toHexString(where));
     if (where == 0xd010) {
       /* Keyboard input */
-      int k = lastKey;
-      if (keyBuf != null) {
-        if (keyBufIndex == keyBuf.length) {
-          keyBuf = null;
-          k = 0;
-        } else {
-          k = keyBuf[keyBufIndex];
-          keyBufIndex++;
-          if (keyBufIndex == keyBuf.length) keyBuf = null;
-        }
-        lastKey = k;
-      }
-      if (lastKey == 0) {
-        warn("Reading keyboard but no key available");
-      }
-      lastKey = 0;
-      return k | 0x80;
-    } else if (where == 0xd011) {
-      if ((keyBuf == null) && (lastKey == 0)) {
-        return 1;
+      if (keyBuffer.isEmpty()) {
+        return 0;
       } else {
-        return 0x80;
+        // This assumed that 0x80 was already or'd in, and that
+        // '\n' was translated to '\r' beforehand. This is done
+        // when the key is read;
+        return keyBuffer.remove();
       }
+    } else if (where == 0xd011) {
+      /* Keyboard status */
+      return (keyBuffer.isEmpty()) ? 1 : 0x80;
     } else if ((where == 0xd0f2) || (where == 0xd012)) {
       /* Display output */
-      /* bit 8 should always be low */
-      return lastOut & 0x7f;
+      // Bit 8 of the last output was cleared when it was written
+      return mem[0xd012];
     } else if (where == 0xd013) {
       /* Display status */
       warn("Read from display status");
@@ -177,11 +75,14 @@ public class Apple1 extends JComponent implements M6502.Memory {
       return;
     } else if ((where == 0xd0f2) || (where == 0xd012)) {
       /* Display output */
-      char ch = (char) (what & 0x7f);
-      if (ch == '\r') ch = '\n';
-      System.out.print(ch);
+      mem[0xd012] = what & 0x7f;
+      char ch = (char) mem[0xd012];
+      if (ch == '\r') {
+        System.out.print("\r\n");
+      } else {
+        System.out.print(ch);
+      }
       System.out.flush();
-      lastOut = what;
       return;
     } else if (where == 0xd013) {
       /* Display status */
@@ -213,23 +114,37 @@ public class Apple1 extends JComponent implements M6502.Memory {
     mem[where] = what;
   }
 
-  public void run() {
-    long clock = 0;
-
-    while (!cpu.halt && (clock < 10000)) {
+  public void mainLoop() {
+    Runnable readKeyboard = () -> {
+      try {
+        while (true) {
+          int ch = System.in.read();
+          if (ch < 0) {
+            System.exit(0);
+          }
+          // If we run with "stty raw -echo", we need to intercept ^D
+          // to gracefully quit
+          if (ch == 4) {
+            System.exit(0);
+          }
+          // Translate newline to carriage return
+          if (ch == 10) {
+            ch = 13;
+          }
+          ch = Character.toUpperCase(ch) | 0x80;
+          keyBuffer.add(ch);
+        }
+      } catch (IOException ignored) {}
+    };
+    Thread keyThread = new Thread(readKeyboard);
+    keyThread.start();
+    while (true) {
       cpu.step();
-      clock++;
     }
   }
 
   public static void main(String args[]) {
     Apple1 me = new Apple1();
-    JFrame f = new JFrame("Apple 1");
-    f.getContentPane().setLayout(new BorderLayout());
-    f.getContentPane().add(me);
-    f.pack();
-    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    f.setVisible(true);
-    me.requestFocus();
+    me.mainLoop();
   }
 }

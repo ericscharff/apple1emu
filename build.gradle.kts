@@ -17,23 +17,10 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
-        }
-        val nativeMain by creating {
-            dependsOn(commonMain)
-        }
-        val nativeTest by creating {
-            dependsOn(commonTest)
-        }
-        val linuxX64Main by getting {
-            dependsOn(nativeMain)
-        }
-        val linuxX64Test by getting {
-            dependsOn(nativeTest)
         }
     }
 }

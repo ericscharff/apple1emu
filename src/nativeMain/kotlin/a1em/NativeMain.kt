@@ -1,7 +1,38 @@
 package a1em
 
-import kotlinx.cinterop.*
-import platform.posix.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.free
+import kotlinx.cinterop.get
+import kotlinx.cinterop.nativeHeap
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.sizeOf
+import kotlinx.cinterop.value
+import platform.posix.ECHO
+import platform.posix.F_GETFL
+import platform.posix.F_SETFL
+import platform.posix.ICANON
+import platform.posix.O_NONBLOCK
+import platform.posix.SEEK_END
+import platform.posix.SEEK_SET
+import platform.posix.STDIN_FILENO
+import platform.posix.TCSANOW
+import platform.posix.fclose
+import platform.posix.fcntl
+import platform.posix.fflush
+import platform.posix.fopen
+import platform.posix.fread
+import platform.posix.fseek
+import platform.posix.ftell
+import platform.posix.memcpy
+import platform.posix.read
+import platform.posix.stdout
+import platform.posix.tcgetattr
+import platform.posix.tcsetattr
+import platform.posix.termios
 
 @OptIn(ExperimentalForeignApi::class)
 class NativeIO : Apple1IO {
@@ -24,7 +55,7 @@ fun readBinaryFile(path: String): IntArray? {
         fseek(file, 0, SEEK_END)
         val size = ftell(file).toInt()
         fseek(file, 0, SEEK_SET)
-        
+
         val buffer = nativeHeap.allocArray<ByteVar>(size)
         try {
             fread(buffer, 1.toULong(), size.toULong(), file)
@@ -45,25 +76,25 @@ fun readBinaryFile(path: String): IntArray? {
 fun main() {
     val io = NativeIO()
     val core = Apple1Core(io)
-    
+
     // Updated path to assets
     val rom = readBinaryFile("assets/apple1.rom")
     if (rom == null) {
         println("Could not find apple1.rom at assets/apple1.rom")
         return
     }
-    
+
     core.loadBios(rom)
-    
+
     println("Apple 1 Emulator (Native)")
     println("Press Ctrl+C to exit")
 
     val originalTermios = nativeHeap.alloc<termios>()
     tcgetattr(STDIN_FILENO, originalTermios.ptr)
-    
+
     val rawTermios = nativeHeap.alloc<termios>()
     memcpy(rawTermios.ptr, originalTermios.ptr, sizeOf<termios>().convert())
-    
+
     rawTermios.c_lflag = rawTermios.c_lflag and (ICANON or ECHO).inv().convert()
     tcsetattr(STDIN_FILENO, TCSANOW, rawTermios.ptr)
 
@@ -72,7 +103,7 @@ fun main() {
 
     try {
         val inputBuffer = nativeHeap.alloc<ByteVar>()
-        
+
         while (true) {
             core.runBatch(1000)
 

@@ -8,59 +8,87 @@ details. */
 
 package a1em
 
-class M6502(private val mem: Memory, var pc: Int) {
-
+class M6502(
+    private val mem: Memory,
+    var pc: Int,
+) {
     interface Memory {
         fun read(where: Int): Int
-        fun write(where: Int, what: Int)
+
+        fun write(
+            where: Int,
+            what: Int,
+        )
     }
 
     companion object {
-        const val cFlag = 0x01
-        const val zFlag = 0x02
-        const val iFlag = 0x04
-        const val dFlag = 0x08
-        const val bFlag = 0x10
-        const val rFlag = 0x20
-        const val vFlag = 0x40
-        const val nFlag = 0x80
+        const val C_FLAG = 0x01
+        const val Z_FLAG = 0x02
+        const val I_FLAG = 0x04
+        const val D_FLAG = 0x08
+        const val B_FLAG = 0x10
+        const val R_FLAG = 0x20
+        const val V_FLAG = 0x40
+        const val N_FLAG = 0x80
 
-        const val ncFlag = (cFlag.inv()) and 0xff
-        const val nzFlag = (zFlag.inv()) and 0xff
-        const val niFlag = (iFlag.inv()) and 0xff
-        const val ndFlag = (dFlag.inv()) and 0xff
-        const val nbFlag = (bFlag.inv()) and 0xff
-        const val nrFlag = (rFlag.inv()) and 0xff
-        const val nvFlag = (vFlag.inv()) and 0xff
-        const val nnFlag = (nFlag.inv()) and 0xff
+        const val NC_FLAG = (C_FLAG.inv()) and 0xff
+        const val NZ_FLAG = (Z_FLAG.inv()) and 0xff
+        const val NI_FLAG = (I_FLAG.inv()) and 0xff
+        const val ND_FLAG = (D_FLAG.inv()) and 0xff
+        const val NB_FLAG = (B_FLAG.inv()) and 0xff
+        const val NR_FLAG = (R_FLAG.inv()) and 0xff
+        const val NV_FLAG = (V_FLAG.inv()) and 0xff
+        const val NN_FLAG = (N_FLAG.inv()) and 0xff
 
-        private const val mIndirectX = 0
-        private const val mZeroPage = 1
-        private const val mImmediate = 2
-        private const val mAbsolute = 3
-        private const val mIndirectY = 4
-        private const val mZeroPageX = 5
-        private const val mZeroPageY = 6
-        private const val mAbsoluteX = 7
-        private const val mAbsoluteY = 8
-        private const val mRelative = 9
-        private const val mIndirect = 10
-        private const val mIndirectZP = 11
-        private const val mAccum = 12
-        private const val mImplied = 13
-        private const val mAIndirectX = 14
+        private const val M_INDIRECT_X = 0
+        private const val M_ZERO_PAGE = 1
+        private const val M_IMMEDIATE = 2
+        private const val M_ABSOLUTE = 3
+        private const val M_INDIRECT_Y = 4
+        private const val M_ZERO_PAGE_X = 5
+        private const val M_ZERO_PAGE_Y = 6
+        private const val M_ABSOLUTE_X = 7
+        private const val M_ABSOLUTE_Y = 8
+        private const val M_RELATIVE = 9
+        private const val M_INDIRECT = 10
+        private const val M_INDIRECT_ZP = 11
+        private const val M_ACCUM = 12
+        private const val M_IMPLIED = 13
+        private const val MA_INDIRECT_X = 14
 
-        private val digits = charArrayOf(
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-        )
+        private val digits =
+            charArrayOf(
+                '0',
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+                'A',
+                'B',
+                'C',
+                'D',
+                'E',
+                'F',
+            )
 
-        private fun dumpHexByte(b: StringBuilder, value: Int) {
+        private fun dumpHexByte(
+            b: StringBuilder,
+            value: Int,
+        ) {
             b.append('$')
             b.append(digits[(value shr 4) and 0xf])
             b.append(digits[value and 0xf])
         }
 
-        private fun dumpHexWord(b: StringBuilder, value: Int) {
+        private fun dumpHexWord(
+            b: StringBuilder,
+            value: Int,
+        ) {
             b.append('$')
             b.append(digits[(value shr 12) and 0xf])
             b.append(digits[(value shr 8) and 0xf])
@@ -68,125 +96,610 @@ class M6502(private val mem: Memory, var pc: Int) {
             b.append(digits[value and 0xf])
         }
 
-        private val mneumonics = arrayOf(
-            "BRK", "ORA", "???", "???", "TSB", "ORA", "ASL", "???", "PHP", "ORA", "ASL", "???", "TSB", "ORA", "ASL", "???",
-            "BPL", "ORA", "ORA", "???", "TRB", "ORA", "ASL", "???", "CLC", "ORA", "INC A", "???", "TRB", "ORA", "ASL", "???",
-            "JSR", "AND", "???", "???", "BIT", "AND", "ROL", "???", "PLP", "AND", "ROL", "???", "BIT", "AND", "ROL", "???",
-            "BMI", "AND", "AND", "???", "BIT", "AND", "ROL", "???", "SEC", "AND", "DEC A", "???", "BIT", "AND", "ROL", "???",
-            "RTI", "EOR", "???", "???", "???", "EOR", "LSR", "???", "PHA", "EOR", "LSR", "???", "JMP", "EOR", "LSR", "???",
-            "BVC", "EOR", "EOR", "???", "???", "EOR", "LSR", "???", "CLI", "EOR", "PHY", "???", "???", "EOR", "LSR", "???",
-            "RTS", "ADC", "???", "???", "STZ", "ADC", "ROR", "???", "PLA", "ADC", "ROR", "???", "JMP", "ADC", "ROR", "???",
-            "BVS", "ADC", "ADC", "???", "STZ", "ADC", "ROR", "???", "SEI", "ADC", "PLY", "???", "JMP", "ADC", "ROR", "???",
-            "BRA", "STA", "???", "???", "STY", "STA", "STX", "???", "DEY", "BIT", "TXA", "???", "STY", "STA", "STX", "???",
-            "BCC", "STA", "STA", "???", "STY", "STA", "STX", "???", "TYA", "STA", "TXS", "???", "STZ", "STA", "STZ", "???",
-            "LDY", "LDA", "LDX", "???", "LDY", "LDA", "LDX", "???", "TAY", "LDA", "TAX", "???", "LDY", "LDA", "LDX", "???",
-            "BCS", "LDA", "LDA", "???", "LDY", "LDA", "LDX", "???", "CLV", "LDA", "TSX", "???", "LDY", "LDA", "LDX", "???",
-            "CPY", "CMP", "???", "???", "CPY", "CMP", "DEC", "???", "INY", "CMP", "DEX", "???", "CPY", "CMP", "DEC", "???",
-            "BNE", "CMP", "???", "???", "???", "CMP", "DEC", "???", "CLD", "CMP", "PHX", "???", "???", "CMP", "DEC", "???",
-            "CPX", "SBC", "???", "???", "CPX", "SBC", "INC", "???", "INX", "SBC", "NOP", "???", "CPX", "SBC", "INC", "???",
-            "BEQ", "SBC", "SBC", "???", "???", "SBC", "INC", "???", "SED", "SBC", "PLX", "???", "???", "SBC", "INC", "???",
-        )
+        private val mneumonics =
+            arrayOf(
+                "BRK",
+                "ORA",
+                "???",
+                "???",
+                "TSB",
+                "ORA",
+                "ASL",
+                "???",
+                "PHP",
+                "ORA",
+                "ASL",
+                "???",
+                "TSB",
+                "ORA",
+                "ASL",
+                "???",
+                "BPL",
+                "ORA",
+                "ORA",
+                "???",
+                "TRB",
+                "ORA",
+                "ASL",
+                "???",
+                "CLC",
+                "ORA",
+                "INC A",
+                "???",
+                "TRB",
+                "ORA",
+                "ASL",
+                "???",
+                "JSR",
+                "AND",
+                "???",
+                "???",
+                "BIT",
+                "AND",
+                "ROL",
+                "???",
+                "PLP",
+                "AND",
+                "ROL",
+                "???",
+                "BIT",
+                "AND",
+                "ROL",
+                "???",
+                "BMI",
+                "AND",
+                "AND",
+                "???",
+                "BIT",
+                "AND",
+                "ROL",
+                "???",
+                "SEC",
+                "AND",
+                "DEC A",
+                "???",
+                "BIT",
+                "AND",
+                "ROL",
+                "???",
+                "RTI",
+                "EOR",
+                "???",
+                "???",
+                "???",
+                "EOR",
+                "LSR",
+                "???",
+                "PHA",
+                "EOR",
+                "LSR",
+                "???",
+                "JMP",
+                "EOR",
+                "LSR",
+                "???",
+                "BVC",
+                "EOR",
+                "EOR",
+                "???",
+                "???",
+                "EOR",
+                "LSR",
+                "???",
+                "CLI",
+                "EOR",
+                "PHY",
+                "???",
+                "???",
+                "EOR",
+                "LSR",
+                "???",
+                "RTS",
+                "ADC",
+                "???",
+                "???",
+                "STZ",
+                "ADC",
+                "ROR",
+                "???",
+                "PLA",
+                "ADC",
+                "ROR",
+                "???",
+                "JMP",
+                "ADC",
+                "ROR",
+                "???",
+                "BVS",
+                "ADC",
+                "ADC",
+                "???",
+                "STZ",
+                "ADC",
+                "ROR",
+                "???",
+                "SEI",
+                "ADC",
+                "PLY",
+                "???",
+                "JMP",
+                "ADC",
+                "ROR",
+                "???",
+                "BRA",
+                "STA",
+                "???",
+                "???",
+                "STY",
+                "STA",
+                "STX",
+                "???",
+                "DEY",
+                "BIT",
+                "TXA",
+                "???",
+                "STY",
+                "STA",
+                "STX",
+                "???",
+                "BCC",
+                "STA",
+                "STA",
+                "???",
+                "STY",
+                "STA",
+                "STX",
+                "???",
+                "TYA",
+                "STA",
+                "TXS",
+                "???",
+                "STZ",
+                "STA",
+                "STZ",
+                "???",
+                "LDY",
+                "LDA",
+                "LDX",
+                "???",
+                "LDY",
+                "LDA",
+                "LDX",
+                "???",
+                "TAY",
+                "LDA",
+                "TAX",
+                "???",
+                "LDY",
+                "LDA",
+                "LDX",
+                "???",
+                "BCS",
+                "LDA",
+                "LDA",
+                "???",
+                "LDY",
+                "LDA",
+                "LDX",
+                "???",
+                "CLV",
+                "LDA",
+                "TSX",
+                "???",
+                "LDY",
+                "LDA",
+                "LDX",
+                "???",
+                "CPY",
+                "CMP",
+                "???",
+                "???",
+                "CPY",
+                "CMP",
+                "DEC",
+                "???",
+                "INY",
+                "CMP",
+                "DEX",
+                "???",
+                "CPY",
+                "CMP",
+                "DEC",
+                "???",
+                "BNE",
+                "CMP",
+                "???",
+                "???",
+                "???",
+                "CMP",
+                "DEC",
+                "???",
+                "CLD",
+                "CMP",
+                "PHX",
+                "???",
+                "???",
+                "CMP",
+                "DEC",
+                "???",
+                "CPX",
+                "SBC",
+                "???",
+                "???",
+                "CPX",
+                "SBC",
+                "INC",
+                "???",
+                "INX",
+                "SBC",
+                "NOP",
+                "???",
+                "CPX",
+                "SBC",
+                "INC",
+                "???",
+                "BEQ",
+                "SBC",
+                "SBC",
+                "???",
+                "???",
+                "SBC",
+                "INC",
+                "???",
+                "SED",
+                "SBC",
+                "PLX",
+                "???",
+                "???",
+                "SBC",
+                "INC",
+                "???",
+            )
 
-        private val modeTable = intArrayOf(
-            mImplied, mIndirectX, mImplied, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mAccum, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mZeroPage, mZeroPageX, mZeroPageX, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mAbsolute, mAbsoluteX, mAbsoluteX, mImplied,
-            mAbsolute, mIndirectX, mImplied, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mAccum, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mZeroPageX, mZeroPageX, mZeroPageX, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mAbsoluteX, mAbsoluteX, mAbsoluteX, mImplied,
-            mImplied, mIndirectX, mImplied, mImplied, mImplied, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mAccum, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mImplied, mZeroPageX, mZeroPageX, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mImplied, mAbsoluteX, mAbsoluteX, mImplied,
-            mImplied, mIndirectX, mImplied, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mAccum, mImplied, mIndirect, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mZeroPageX, mZeroPageX, mZeroPageX, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mAbsoluteX, mAbsoluteX, mAbsoluteX, mImplied,
-            mRelative, mIndirectX, mImplied, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mImplied, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mZeroPageX, mZeroPageX, mZeroPageY, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mAbsolute, mAbsoluteX, mAbsoluteX, mImplied,
-            mImmediate, mIndirectX, mImmediate, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mImplied, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mZeroPageX, mZeroPageX, mZeroPageY, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mAbsoluteX, mAbsoluteX, mAbsoluteY, mImplied,
-            mImmediate, mIndirectX, mImplied, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mImplied, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mImplied, mImplied, mImplied, mZeroPageX, mZeroPageX, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mImplied, mAbsoluteX, mAbsoluteX, mImplied,
-            mImmediate, mIndirectX, mImplied, mImplied, mZeroPage, mZeroPage, mZeroPage, mImplied, mImplied, mImmediate, mImplied, mImplied, mAbsolute, mAbsolute, mAbsolute, mImplied,
-            mRelative, mIndirectY, mIndirectZP, mImplied, mImplied, mZeroPageX, mZeroPageX, mImplied, mImplied, mAbsoluteY, mImplied, mImplied, mImplied, mAbsoluteX, mAbsoluteX, mImplied,
-        )
+        private val modeTable =
+            intArrayOf(
+                M_IMPLIED,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_ACCUM,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_ACCUM,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_ACCUM,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_ACCUM,
+                M_IMPLIED,
+                M_INDIRECT,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_INDIRECT_X,
+                M_IMMEDIATE,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_INDIRECT_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_ZERO_PAGE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMMEDIATE,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_ABSOLUTE,
+                M_IMPLIED,
+                M_RELATIVE,
+                M_INDIRECT_Y,
+                M_INDIRECT_ZP,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ZERO_PAGE_X,
+                M_ZERO_PAGE_X,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_Y,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_IMPLIED,
+                M_ABSOLUTE_X,
+                M_ABSOLUTE_X,
+                M_IMPLIED,
+            )
     }
 
     var a: Int = 0
     var x: Int = 0
     var y: Int = 0
     private var sp: Int = 0xff
-    private var flags: Int = rFlag
+    private var flags: Int = R_FLAG
     var halt: Boolean = false
 
-    fun bFlagSet(): Boolean = (flags and bFlag) != 0
-    fun dFlagSet(): Boolean = (flags and dFlag) != 0
+    fun bFlagSet(): Boolean = (flags and B_FLAG) != 0
+
+    fun dFlagSet(): Boolean = (flags and D_FLAG) != 0
 
     private fun complement(x: Int): Int = if (x < 128) x else -1 * ((x xor 0xff) + 1)
-    private fun BINtoBCD(v: Int): Int = (((v / 10) % 10) shl 4) or (v % 10)
-    private fun BCDtoBIN(v: Int): Int = ((v shr 4) * 10) + (v and 0xf)
+
+    private fun binToBcd(v: Int): Int = (((v / 10) % 10) shl 4) or (v % 10)
+
+    private fun bcdToBin(v: Int): Int = ((v shr 4) * 10) + (v and 0xf)
 
     fun setNZ(v: Int) {
         if (v == 0) {
-            flags = flags or zFlag
+            flags = flags or Z_FLAG
         } else {
-            flags = flags and nzFlag
+            flags = flags and NZ_FLAG
         }
         if ((v and 0x80) != 0) {
-            flags = flags or nFlag
+            flags = flags or N_FLAG
         } else {
-            flags = flags and nnFlag
+            flags = flags and NN_FLAG
         }
     }
 
     fun setC(v: Boolean) {
         if (v) {
-            flags = flags or cFlag
+            flags = flags or C_FLAG
         } else {
-            flags = flags and ncFlag
+            flags = flags and NC_FLAG
         }
     }
 
     private fun setV(v: Boolean) {
         if (v) {
-            flags = flags or vFlag
+            flags = flags or V_FLAG
         } else {
-            flags = flags and nvFlag
+            flags = flags and NV_FLAG
         }
     }
 
     private fun setI(v: Boolean) {
         if (v) {
-            flags = flags or iFlag
+            flags = flags or I_FLAG
         } else {
-            flags = flags and niFlag
+            flags = flags and NI_FLAG
         }
     }
 
     private fun setD(v: Boolean) {
         if (v) {
-            flags = flags or dFlag
+            flags = flags or D_FLAG
         } else {
-            flags = flags and ndFlag
+            flags = flags and ND_FLAG
         }
     }
 
     private fun setB(v: Boolean) {
         if (v) {
-            flags = flags or bFlag
+            flags = flags or B_FLAG
         } else {
-            flags = flags and nbFlag
+            flags = flags and NB_FLAG
         }
     }
 
     private fun setN(v: Boolean) {
         if (v) {
-            flags = flags or nFlag
+            flags = flags or N_FLAG
         } else {
-            flags = flags and nnFlag
+            flags = flags and NN_FLAG
         }
     }
 
     private fun setZ(v: Boolean) {
         if (v) {
-            flags = flags or zFlag
+            flags = flags or Z_FLAG
         } else {
-            flags = flags and nzFlag
+            flags = flags and NZ_FLAG
         }
     }
 
@@ -230,27 +743,27 @@ class M6502(private val mem: Memory, var pc: Int) {
     private fun ea(mode: Int): Int {
         var v = -1
         when (mode) {
-            mIndirectX -> v = wordAt((fetch() + x) and 0xff)
-            mZeroPage -> v = fetch()
-            mImmediate -> v = fetch()
-            mAbsolute -> v = fetchWord()
-            mIndirectY -> v = wordAt(fetch()) + y
-            mZeroPageX -> v = 0xff and (fetch() + x)
-            mZeroPageY -> v = 0xff and (fetch() + y)
-            mAbsoluteX -> v = fetchWord() + x
-            mAbsoluteY -> v = fetchWord() + y
-            mRelative -> v = complement(fetch()) + pc
-            mIndirect -> v = wordAt(fetchWord())
-            mAIndirectX -> v = wordAt(fetchWord() + x)
-            mIndirectZP -> v = wordAt(fetch())
-            mAccum -> v = a
+            M_INDIRECT_X -> v = wordAt((fetch() + x) and 0xff)
+            M_ZERO_PAGE -> v = fetch()
+            M_IMMEDIATE -> v = fetch()
+            M_ABSOLUTE -> v = fetchWord()
+            M_INDIRECT_Y -> v = wordAt(fetch()) + y
+            M_ZERO_PAGE_X -> v = 0xff and (fetch() + x)
+            M_ZERO_PAGE_Y -> v = 0xff and (fetch() + y)
+            M_ABSOLUTE_X -> v = fetchWord() + x
+            M_ABSOLUTE_Y -> v = fetchWord() + y
+            M_RELATIVE -> v = complement(fetch()) + pc
+            M_INDIRECT -> v = wordAt(fetchWord())
+            MA_INDIRECT_X -> v = wordAt(fetchWord() + x)
+            M_INDIRECT_ZP -> v = wordAt(fetch())
+            M_ACCUM -> v = a
         }
         return v
     }
 
     private fun cea(mode: Int): Int {
         val v = ea(mode)
-        return if (mode == mImmediate) {
+        return if (mode == M_IMMEDIATE) {
             v
         } else {
             mem.read(v)
@@ -260,13 +773,13 @@ class M6502(private val mem: Memory, var pc: Int) {
     private fun doADC(mode: Int) {
         var m = cea(mode)
         if (dFlagSet()) {
-            m = BCDtoBIN(a) + BCDtoBIN(m) + (flags and cFlag)
+            m = bcdToBin(a) + bcdToBin(m) + (flags and C_FLAG)
             setC(m > 99)
-            a = BINtoBCD(m)
+            a = binToBcd(m)
             setNZ(a)
             return
         }
-        val r = a + m + (flags and cFlag)
+        val r = a + m + (flags and C_FLAG)
         setC(r > 255)
         val res = r and 255
         setNZ(res)
@@ -280,7 +793,7 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     private fun doASL(mode: Int) {
-        if (mode == mAccum) {
+        if (mode == M_ACCUM) {
             a = a shl 1
             if (a > 255) {
                 setC(true)
@@ -306,17 +819,17 @@ class M6502(private val mem: Memory, var pc: Int) {
 
     private fun doBCC(mode: Int) {
         val dst = ea(mode)
-        if ((cFlag and flags) == 0) pc = dst
+        if ((C_FLAG and flags) == 0) pc = dst
     }
 
     private fun doBCS(mode: Int) {
         val dst = ea(mode)
-        if ((cFlag and flags) != 0) pc = dst
+        if ((C_FLAG and flags) != 0) pc = dst
     }
 
     private fun doBEQ(mode: Int) {
         val dst = ea(mode)
-        if ((zFlag and flags) != 0) pc = dst
+        if ((Z_FLAG and flags) != 0) pc = dst
     }
 
     private fun doBIT(mode: Int) {
@@ -328,32 +841,35 @@ class M6502(private val mem: Memory, var pc: Int) {
 
     private fun doBMI(mode: Int) {
         val dst = ea(mode)
-        if ((nFlag and flags) != 0) pc = dst
+        if ((N_FLAG and flags) != 0) pc = dst
     }
 
     private fun doBNE(mode: Int) {
         val dst = ea(mode)
-        if ((zFlag and flags) == 0) pc = dst
+        if ((Z_FLAG and flags) == 0) pc = dst
     }
 
     private fun doBPL(mode: Int) {
         val dst = ea(mode)
-        if ((nFlag and flags) == 0) pc = dst
+        if ((N_FLAG and flags) == 0) pc = dst
     }
 
     private fun doBVC(mode: Int) {
         val dst = ea(mode)
-        if ((vFlag and flags) == 0) pc = dst
+        if ((V_FLAG and flags) == 0) pc = dst
     }
 
     private fun doBVS(mode: Int) {
         val dst = ea(mode)
-        if ((vFlag and flags) != 0) pc = dst
+        if ((V_FLAG and flags) != 0) pc = dst
     }
 
     fun doCLC(mode: Int) = setC(false)
+
     private fun doCLD(mode: Int) = setD(false)
+
     private fun doCLI(mode: Int) = setI(false)
+
     private fun doCLV(mode: Int) = setV(false)
 
     private fun doCMP(mode: Int) {
@@ -442,7 +958,7 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     private fun doLSR(mode: Int) {
-        if (mode == mAccum) {
+        if (mode == M_ACCUM) {
             setC((a and 1) != 0)
             a = a shr 1
             setNZ(a)
@@ -466,7 +982,7 @@ class M6502(private val mem: Memory, var pc: Int) {
     private fun doPHA(mode: Int) = pushByte(a)
 
     private fun doPHP(mode: Int) {
-        val pFlags = flags or rFlag or bFlag
+        val pFlags = flags or R_FLAG or B_FLAG
         pushByte(pFlags)
     }
 
@@ -480,9 +996,9 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     private fun doROL(mode: Int) {
-        if (mode == mAccum) {
+        if (mode == M_ACCUM) {
             a = a shl 1
-            a = a or (flags and cFlag)
+            a = a or (flags and C_FLAG)
             if (a > 255) {
                 a = a and 0xff
                 setC(true)
@@ -494,7 +1010,7 @@ class M6502(private val mem: Memory, var pc: Int) {
             val m = ea(mode)
             var v = mem.read(m)
             v = v shl 1
-            v = v or (flags and cFlag)
+            v = v or (flags and C_FLAG)
             if (v > 255) {
                 v = v and 0xff
                 setC(true)
@@ -507,15 +1023,15 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     private fun doROR(mode: Int) {
-        if (mode == mAccum) {
-            if ((cFlag and flags) != 0) a = a or 0x100
+        if (mode == M_ACCUM) {
+            if ((C_FLAG and flags) != 0) a = a or 0x100
             setC((a and 1) != 0)
             a = a shr 1
             setNZ(a)
         } else {
             val m = ea(mode)
             var v = mem.read(m)
-            if ((cFlag and flags) != 0) v = v or 0x100
+            if ((C_FLAG and flags) != 0) v = v or 0x100
             setC((v and 1) != 0)
             v = v shr 1
             mem.write(m, v)
@@ -535,18 +1051,18 @@ class M6502(private val mem: Memory, var pc: Int) {
     private fun doSBC(mode: Int) {
         val m = cea(mode)
         if (dFlagSet()) {
-            var res = BCDtoBIN(a) - BCDtoBIN(m) - 1 + (flags and cFlag)
+            var res = bcdToBin(a) - bcdToBin(m) - 1 + (flags and C_FLAG)
             if ((res and 0xff00) == 0) {
                 setC(true)
             } else {
                 setC(false)
                 res += 100
             }
-            a = BINtoBCD(res)
+            a = binToBcd(res)
             setNZ(a)
             return
         }
-        val r = a - m - 1 + (flags and cFlag)
+        val r = a - m - 1 + (flags and C_FLAG)
         setC((r and 0xff00) == 0)
         val res = r and 0xff
         setNZ(res)
@@ -555,11 +1071,15 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     fun doSEC(mode: Int) = setC(true)
+
     private fun doSED(mode: Int) = setD(true)
+
     private fun doSEI(mode: Int) = setI(true)
 
     private fun doSTA(mode: Int) = mem.write(ea(mode), a)
+
     private fun doSTX(mode: Int) = mem.write(ea(mode), x)
+
     private fun doSTY(mode: Int) = mem.write(ea(mode), y)
 
     private fun doTAX(mode: Int) {
@@ -595,9 +1115,9 @@ class M6502(private val mem: Memory, var pc: Int) {
         halt = true
     }
 
-    /* ================================================================ */
-    /* 65C02 OPCODES                                                    */
-    /* ================================================================ */
+    // ================================================================
+    // 65C02 OPCODES
+    // ================================================================
 
     private fun doBRA(mode: Int) {
         pc = ea(mode)
@@ -614,6 +1134,7 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     private fun doPHX(mode: Int) = pushByte(x)
+
     private fun doPHY(mode: Int) = pushByte(y)
 
     private fun doPLX(mode: Int) {
@@ -653,7 +1174,7 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     fun tryInterrupt() {
-        if ((iFlag and flags) == 0) interrupt(false)
+        if ((I_FLAG and flags) == 0) interrupt(false)
     }
 
     fun jumpTo(where: Int) {
@@ -671,262 +1192,262 @@ class M6502(private val mem: Memory, var pc: Int) {
     fun step() {
         val i = fetch()
         when (i) {
-            0 -> doBRK(mImplied)
-            1 -> doORA(mIndirectX)
-            2 -> doILL(mImplied)
-            3 -> doILL(mImplied)
-            4 -> doTSB(mZeroPage)
-            5 -> doORA(mZeroPage)
-            6 -> doASL(mZeroPage)
-            7 -> doNOP(mImplied)
-            8 -> doPHP(mImplied)
-            9 -> doORA(mImmediate)
-            10 -> doASL(mAccum)
-            11 -> doILL(mImplied)
-            12 -> doTSB(mAbsolute)
-            13 -> doORA(mAbsolute)
-            14 -> doASL(mAbsolute)
-            15 -> doILL(mImplied)
-            16 -> doBPL(mRelative)
-            17 -> doORA(mIndirectY)
-            18 -> doORA(mIndirectZP)
-            19 -> doILL(mImplied)
-            20 -> doTRB(mZeroPage)
-            21 -> doORA(mZeroPageX)
-            22 -> doASL(mZeroPageX)
-            23 -> doILL(mImplied)
-            24 -> doCLC(mImplied)
-            25 -> doORA(mAbsoluteY)
-            26 -> doINA(mImplied)
-            27 -> doILL(mImplied)
-            28 -> doTRB(mAbsolute)
-            29 -> doORA(mAbsoluteX)
-            30 -> doASL(mAbsoluteX)
-            31 -> doILL(mImplied)
-            32 -> doJSR(mAbsolute)
-            33 -> doAND(mIndirectX)
-            34 -> doILL(mImplied)
-            35 -> doILL(mImplied)
-            36 -> doBIT(mZeroPage)
-            37 -> doAND(mZeroPage)
-            38 -> doROL(mZeroPage)
-            39 -> doILL(mImplied)
-            40 -> doPLP(mImplied)
-            41 -> doAND(mImmediate)
-            42 -> doROL(mAccum)
-            43 -> doILL(mImplied)
-            44 -> doBIT(mAbsolute)
-            45 -> doAND(mAbsolute)
-            46 -> doROL(mAbsolute)
-            47 -> doILL(mImplied)
-            48 -> doBMI(mRelative)
-            49 -> doAND(mIndirectY)
-            50 -> doAND(mIndirectZP)
-            51 -> doILL(mImplied)
-            52 -> doBIT(mZeroPageX)
-            53 -> doAND(mZeroPageX)
-            54 -> doROL(mZeroPageX)
-            55 -> doILL(mImplied)
-            56 -> doSEC(mImplied)
-            57 -> doAND(mAbsoluteY)
-            58 -> doDEA(mImplied)
-            59 -> doILL(mImplied)
-            60 -> doBIT(mAbsoluteX)
-            61 -> doAND(mAbsoluteX)
-            62 -> doROL(mAbsoluteX)
-            63 -> doILL(mImplied)
-            64 -> doRTI(mImplied)
-            65 -> doEOR(mIndirectX)
-            66 -> doILL(mImplied)
-            67 -> doILL(mImplied)
-            68 -> doILL(mImplied)
-            69 -> doEOR(mZeroPage)
-            70 -> doLSR(mZeroPage)
-            71 -> doILL(mImplied)
-            72 -> doPHA(mImplied)
-            73 -> doEOR(mImmediate)
-            74 -> doLSR(mAccum)
-            75 -> doILL(mImplied)
-            76 -> doJMP(mAbsolute)
-            77 -> doEOR(mAbsolute)
-            78 -> doLSR(mAbsolute)
-            79 -> doILL(mImplied)
-            80 -> doBVC(mRelative)
-            81 -> doEOR(mIndirectY)
-            82 -> doEOR(mIndirectZP)
-            83 -> doILL(mImplied)
-            84 -> doILL(mImplied)
-            85 -> doEOR(mZeroPageX)
-            86 -> doLSR(mZeroPageX)
-            87 -> doILL(mImplied)
-            88 -> doCLI(mImplied)
-            89 -> doEOR(mAbsoluteY)
-            90 -> doPHY(mImplied)
-            91 -> doILL(mImplied)
-            92 -> doILL(mImplied)
-            93 -> doEOR(mAbsoluteX)
-            94 -> doLSR(mAbsoluteX)
-            95 -> doILL(mImplied)
-            96 -> doRTS(mImplied)
-            97 -> doADC(mIndirectX)
-            98 -> doILL(mImplied)
-            99 -> doILL(mImplied)
-            100 -> doSTZ(mZeroPage)
-            101 -> doADC(mZeroPage)
-            102 -> doROR(mZeroPage)
-            103 -> doILL(mImplied)
-            104 -> doPLA(mImplied)
-            105 -> doADC(mImmediate)
-            106 -> doROR(mAccum)
-            107 -> doILL(mImplied)
-            108 -> doJMP(mIndirect)
-            109 -> doADC(mAbsolute)
-            110 -> doROR(mAbsolute)
-            111 -> doILL(mImplied)
-            112 -> doBVS(mRelative)
-            113 -> doADC(mIndirectY)
-            114 -> doADC(mIndirectZP)
-            115 -> doILL(mImplied)
-            116 -> doSTZ(mZeroPageX)
-            117 -> doADC(mZeroPageX)
-            118 -> doROR(mZeroPageX)
-            119 -> doILL(mImplied)
-            120 -> doSEI(mImplied)
-            121 -> doADC(mAbsoluteY)
-            122 -> doPLY(mImplied)
-            123 -> doILL(mImplied)
-            124 -> doJMP(mAIndirectX)
-            125 -> doADC(mAbsoluteX)
-            126 -> doROR(mAbsoluteX)
-            127 -> doILL(mImplied)
-            128 -> doBRA(mRelative)
-            129 -> doSTA(mIndirectX)
-            130 -> doILL(mImplied)
-            131 -> doILL(mImplied)
-            132 -> doSTY(mZeroPage)
-            133 -> doSTA(mZeroPage)
-            134 -> doSTX(mZeroPage)
-            135 -> doILL(mImplied)
-            136 -> doDEY(mImplied)
-            137 -> doBIT(mImmediate)
-            138 -> doTXA(mImplied)
-            139 -> doILL(mImplied)
-            140 -> doSTY(mAbsolute)
-            141 -> doSTA(mAbsolute)
-            142 -> doSTX(mAbsolute)
-            143 -> doILL(mImplied)
-            144 -> doBCC(mRelative)
-            145 -> doSTA(mIndirectY)
-            146 -> doSTA(mIndirectZP)
-            147 -> doILL(mImplied)
-            148 -> doSTY(mZeroPageX)
-            149 -> doSTA(mZeroPageX)
-            150 -> doSTX(mZeroPageY)
-            151 -> doILL(mImplied)
-            152 -> doTYA(mImplied)
-            153 -> doSTA(mAbsoluteY)
-            154 -> doTXS(mImplied)
-            155 -> doILL(mImplied)
-            156 -> doSTZ(mAbsolute)
-            157 -> doSTA(mAbsoluteX)
-            158 -> doSTZ(mAbsoluteX)
-            159 -> doILL(mImplied)
-            160 -> doLDY(mImmediate)
-            161 -> doLDA(mIndirectX)
-            162 -> doLDX(mImmediate)
-            163 -> doILL(mImplied)
-            164 -> doLDY(mZeroPage)
-            165 -> doLDA(mZeroPage)
-            166 -> doLDX(mZeroPage)
-            167 -> doILL(mImplied)
-            168 -> doTAY(mImplied)
-            169 -> doLDA(mImmediate)
-            170 -> doTAX(mImplied)
-            171 -> doILL(mImplied)
-            172 -> doLDY(mAbsolute)
-            173 -> doLDA(mAbsolute)
-            174 -> doLDX(mAbsolute)
-            175 -> doILL(mImplied)
-            176 -> doBCS(mRelative)
-            177 -> doLDA(mIndirectY)
-            178 -> doLDA(mIndirectZP)
-            179 -> doILL(mImplied)
-            180 -> doLDY(mZeroPageX)
-            181 -> doLDA(mZeroPageX)
-            182 -> doLDX(mZeroPageY)
-            183 -> doILL(mImplied)
-            184 -> doCLV(mImplied)
-            185 -> doLDA(mAbsoluteY)
-            186 -> doTSX(mImplied)
-            187 -> doILL(mImplied)
-            188 -> doLDY(mAbsoluteX)
-            189 -> doLDA(mAbsoluteX)
-            190 -> doLDX(mAbsoluteY)
-            191 -> doILL(mImplied)
-            192 -> doCPY(mImmediate)
-            193 -> doCMP(mIndirectX)
-            194 -> doILL(mImplied)
-            195 -> doILL(mImplied)
-            196 -> doCPY(mZeroPage)
-            197 -> doCMP(mZeroPage)
-            198 -> doDEC(mZeroPage)
-            199 -> doILL(mImplied)
-            200 -> doINY(mImplied)
-            201 -> doCMP(mImmediate)
-            202 -> doDEX(mImplied)
-            203 -> doILL(mImplied)
-            204 -> doCPY(mAbsolute)
-            205 -> doCMP(mAbsolute)
-            206 -> doDEC(mAbsolute)
-            207 -> doILL(mImplied)
-            208 -> doBNE(mRelative)
-            209 -> doCMP(mIndirectY)
-            210 -> doCMP(mIndirectZP)
-            211 -> doILL(mImplied)
-            212 -> doILL(mImplied)
-            213 -> doCMP(mZeroPageX)
-            214 -> doDEC(mZeroPageX)
-            215 -> doILL(mImplied)
-            216 -> doCLD(mImplied)
-            217 -> doCMP(mAbsoluteY)
-            218 -> doPHX(mImplied)
-            219 -> doILL(mImplied)
-            220 -> doILL(mImplied)
-            221 -> doCMP(mAbsoluteX)
-            222 -> doDEC(mAbsoluteX)
-            223 -> doILL(mImplied)
-            224 -> doCPX(mImmediate)
-            225 -> doSBC(mIndirectX)
-            226 -> doILL(mImplied)
-            227 -> doILL(mImplied)
-            228 -> doCPX(mZeroPage)
-            229 -> doSBC(mZeroPage)
-            230 -> doINC(mZeroPage)
-            231 -> doILL(mImplied)
-            232 -> doINX(mImplied)
-            233 -> doSBC(mImmediate)
-            234 -> doNOP(mImplied)
-            235 -> doILL(mImplied)
-            236 -> doCPX(mAbsolute)
-            237 -> doSBC(mAbsolute)
-            238 -> doINC(mAbsolute)
-            239 -> doILL(mImplied)
-            240 -> doBEQ(mRelative)
-            241 -> doSBC(mIndirectY)
-            242 -> doSBC(mIndirectZP)
-            243 -> doILL(mImplied)
-            244 -> doILL(mImplied)
-            245 -> doSBC(mZeroPageX)
-            246 -> doINC(mZeroPageX)
-            247 -> doILL(mImplied)
-            248 -> doSED(mImplied)
-            249 -> doSBC(mAbsoluteY)
-            250 -> doPLX(mImplied)
-            251 -> doILL(mImplied)
-            252 -> doILL(mImplied)
-            253 -> doSBC(mAbsoluteX)
-            254 -> doINC(mAbsoluteX)
-            255 -> doILL(mImplied)
+            0 -> doBRK(M_IMPLIED)
+            1 -> doORA(M_INDIRECT_X)
+            2 -> doILL(M_IMPLIED)
+            3 -> doILL(M_IMPLIED)
+            4 -> doTSB(M_ZERO_PAGE)
+            5 -> doORA(M_ZERO_PAGE)
+            6 -> doASL(M_ZERO_PAGE)
+            7 -> doNOP(M_IMPLIED)
+            8 -> doPHP(M_IMPLIED)
+            9 -> doORA(M_IMMEDIATE)
+            10 -> doASL(M_ACCUM)
+            11 -> doILL(M_IMPLIED)
+            12 -> doTSB(M_ABSOLUTE)
+            13 -> doORA(M_ABSOLUTE)
+            14 -> doASL(M_ABSOLUTE)
+            15 -> doILL(M_IMPLIED)
+            16 -> doBPL(M_RELATIVE)
+            17 -> doORA(M_INDIRECT_Y)
+            18 -> doORA(M_INDIRECT_ZP)
+            19 -> doILL(M_IMPLIED)
+            20 -> doTRB(M_ZERO_PAGE)
+            21 -> doORA(M_ZERO_PAGE_X)
+            22 -> doASL(M_ZERO_PAGE_X)
+            23 -> doILL(M_IMPLIED)
+            24 -> doCLC(M_IMPLIED)
+            25 -> doORA(M_ABSOLUTE_Y)
+            26 -> doINA(M_IMPLIED)
+            27 -> doILL(M_IMPLIED)
+            28 -> doTRB(M_ABSOLUTE)
+            29 -> doORA(M_ABSOLUTE_X)
+            30 -> doASL(M_ABSOLUTE_X)
+            31 -> doILL(M_IMPLIED)
+            32 -> doJSR(M_ABSOLUTE)
+            33 -> doAND(M_INDIRECT_X)
+            34 -> doILL(M_IMPLIED)
+            35 -> doILL(M_IMPLIED)
+            36 -> doBIT(M_ZERO_PAGE)
+            37 -> doAND(M_ZERO_PAGE)
+            38 -> doROL(M_ZERO_PAGE)
+            39 -> doILL(M_IMPLIED)
+            40 -> doPLP(M_IMPLIED)
+            41 -> doAND(M_IMMEDIATE)
+            42 -> doROL(M_ACCUM)
+            43 -> doILL(M_IMPLIED)
+            44 -> doBIT(M_ABSOLUTE)
+            45 -> doAND(M_ABSOLUTE)
+            46 -> doROL(M_ABSOLUTE)
+            47 -> doILL(M_IMPLIED)
+            48 -> doBMI(M_RELATIVE)
+            49 -> doAND(M_INDIRECT_Y)
+            50 -> doAND(M_INDIRECT_ZP)
+            51 -> doILL(M_IMPLIED)
+            52 -> doBIT(M_ZERO_PAGE_X)
+            53 -> doAND(M_ZERO_PAGE_X)
+            54 -> doROL(M_ZERO_PAGE_X)
+            55 -> doILL(M_IMPLIED)
+            56 -> doSEC(M_IMPLIED)
+            57 -> doAND(M_ABSOLUTE_Y)
+            58 -> doDEA(M_IMPLIED)
+            59 -> doILL(M_IMPLIED)
+            60 -> doBIT(M_ABSOLUTE_X)
+            61 -> doAND(M_ABSOLUTE_X)
+            62 -> doROL(M_ABSOLUTE_X)
+            63 -> doILL(M_IMPLIED)
+            64 -> doRTI(M_IMPLIED)
+            65 -> doEOR(M_INDIRECT_X)
+            66 -> doILL(M_IMPLIED)
+            67 -> doILL(M_IMPLIED)
+            68 -> doILL(M_IMPLIED)
+            69 -> doEOR(M_ZERO_PAGE)
+            70 -> doLSR(M_ZERO_PAGE)
+            71 -> doILL(M_IMPLIED)
+            72 -> doPHA(M_IMPLIED)
+            73 -> doEOR(M_IMMEDIATE)
+            74 -> doLSR(M_ACCUM)
+            75 -> doILL(M_IMPLIED)
+            76 -> doJMP(M_ABSOLUTE)
+            77 -> doEOR(M_ABSOLUTE)
+            78 -> doLSR(M_ABSOLUTE)
+            79 -> doILL(M_IMPLIED)
+            80 -> doBVC(M_RELATIVE)
+            81 -> doEOR(M_INDIRECT_Y)
+            82 -> doEOR(M_INDIRECT_ZP)
+            83 -> doILL(M_IMPLIED)
+            84 -> doILL(M_IMPLIED)
+            85 -> doEOR(M_ZERO_PAGE_X)
+            86 -> doLSR(M_ZERO_PAGE_X)
+            87 -> doILL(M_IMPLIED)
+            88 -> doCLI(M_IMPLIED)
+            89 -> doEOR(M_ABSOLUTE_Y)
+            90 -> doPHY(M_IMPLIED)
+            91 -> doILL(M_IMPLIED)
+            92 -> doILL(M_IMPLIED)
+            93 -> doEOR(M_ABSOLUTE_X)
+            94 -> doLSR(M_ABSOLUTE_X)
+            95 -> doILL(M_IMPLIED)
+            96 -> doRTS(M_IMPLIED)
+            97 -> doADC(M_INDIRECT_X)
+            98 -> doILL(M_IMPLIED)
+            99 -> doILL(M_IMPLIED)
+            100 -> doSTZ(M_ZERO_PAGE)
+            101 -> doADC(M_ZERO_PAGE)
+            102 -> doROR(M_ZERO_PAGE)
+            103 -> doILL(M_IMPLIED)
+            104 -> doPLA(M_IMPLIED)
+            105 -> doADC(M_IMMEDIATE)
+            106 -> doROR(M_ACCUM)
+            107 -> doILL(M_IMPLIED)
+            108 -> doJMP(M_INDIRECT)
+            109 -> doADC(M_ABSOLUTE)
+            110 -> doROR(M_ABSOLUTE)
+            111 -> doILL(M_IMPLIED)
+            112 -> doBVS(M_RELATIVE)
+            113 -> doADC(M_INDIRECT_Y)
+            114 -> doADC(M_INDIRECT_ZP)
+            115 -> doILL(M_IMPLIED)
+            116 -> doSTZ(M_ZERO_PAGE_X)
+            117 -> doADC(M_ZERO_PAGE_X)
+            118 -> doROR(M_ZERO_PAGE_X)
+            119 -> doILL(M_IMPLIED)
+            120 -> doSEI(M_IMPLIED)
+            121 -> doADC(M_ABSOLUTE_Y)
+            122 -> doPLY(M_IMPLIED)
+            123 -> doILL(M_IMPLIED)
+            124 -> doJMP(MA_INDIRECT_X)
+            125 -> doADC(M_ABSOLUTE_X)
+            126 -> doROR(M_ABSOLUTE_X)
+            127 -> doILL(M_IMPLIED)
+            128 -> doBRA(M_RELATIVE)
+            129 -> doSTA(M_INDIRECT_X)
+            130 -> doILL(M_IMPLIED)
+            131 -> doILL(M_IMPLIED)
+            132 -> doSTY(M_ZERO_PAGE)
+            133 -> doSTA(M_ZERO_PAGE)
+            134 -> doSTX(M_ZERO_PAGE)
+            135 -> doILL(M_IMPLIED)
+            136 -> doDEY(M_IMPLIED)
+            137 -> doBIT(M_IMMEDIATE)
+            138 -> doTXA(M_IMPLIED)
+            139 -> doILL(M_IMPLIED)
+            140 -> doSTY(M_ABSOLUTE)
+            141 -> doSTA(M_ABSOLUTE)
+            142 -> doSTX(M_ABSOLUTE)
+            143 -> doILL(M_IMPLIED)
+            144 -> doBCC(M_RELATIVE)
+            145 -> doSTA(M_INDIRECT_Y)
+            146 -> doSTA(M_INDIRECT_ZP)
+            147 -> doILL(M_IMPLIED)
+            148 -> doSTY(M_ZERO_PAGE_X)
+            149 -> doSTA(M_ZERO_PAGE_X)
+            150 -> doSTX(M_ZERO_PAGE_Y)
+            151 -> doILL(M_IMPLIED)
+            152 -> doTYA(M_IMPLIED)
+            153 -> doSTA(M_ABSOLUTE_Y)
+            154 -> doTXS(M_IMPLIED)
+            155 -> doILL(M_IMPLIED)
+            156 -> doSTZ(M_ABSOLUTE)
+            157 -> doSTA(M_ABSOLUTE_X)
+            158 -> doSTZ(M_ABSOLUTE_X)
+            159 -> doILL(M_IMPLIED)
+            160 -> doLDY(M_IMMEDIATE)
+            161 -> doLDA(M_INDIRECT_X)
+            162 -> doLDX(M_IMMEDIATE)
+            163 -> doILL(M_IMPLIED)
+            164 -> doLDY(M_ZERO_PAGE)
+            165 -> doLDA(M_ZERO_PAGE)
+            166 -> doLDX(M_ZERO_PAGE)
+            167 -> doILL(M_IMPLIED)
+            168 -> doTAY(M_IMPLIED)
+            169 -> doLDA(M_IMMEDIATE)
+            170 -> doTAX(M_IMPLIED)
+            171 -> doILL(M_IMPLIED)
+            172 -> doLDY(M_ABSOLUTE)
+            173 -> doLDA(M_ABSOLUTE)
+            174 -> doLDX(M_ABSOLUTE)
+            175 -> doILL(M_IMPLIED)
+            176 -> doBCS(M_RELATIVE)
+            177 -> doLDA(M_INDIRECT_Y)
+            178 -> doLDA(M_INDIRECT_ZP)
+            179 -> doILL(M_IMPLIED)
+            180 -> doLDY(M_ZERO_PAGE_X)
+            181 -> doLDA(M_ZERO_PAGE_X)
+            182 -> doLDX(M_ZERO_PAGE_Y)
+            183 -> doILL(M_IMPLIED)
+            184 -> doCLV(M_IMPLIED)
+            185 -> doLDA(M_ABSOLUTE_Y)
+            186 -> doTSX(M_IMPLIED)
+            187 -> doILL(M_IMPLIED)
+            188 -> doLDY(M_ABSOLUTE_X)
+            189 -> doLDA(M_ABSOLUTE_X)
+            190 -> doLDX(M_ABSOLUTE_Y)
+            191 -> doILL(M_IMPLIED)
+            192 -> doCPY(M_IMMEDIATE)
+            193 -> doCMP(M_INDIRECT_X)
+            194 -> doILL(M_IMPLIED)
+            195 -> doILL(M_IMPLIED)
+            196 -> doCPY(M_ZERO_PAGE)
+            197 -> doCMP(M_ZERO_PAGE)
+            198 -> doDEC(M_ZERO_PAGE)
+            199 -> doILL(M_IMPLIED)
+            200 -> doINY(M_IMPLIED)
+            201 -> doCMP(M_IMMEDIATE)
+            202 -> doDEX(M_IMPLIED)
+            203 -> doILL(M_IMPLIED)
+            204 -> doCPY(M_ABSOLUTE)
+            205 -> doCMP(M_ABSOLUTE)
+            206 -> doDEC(M_ABSOLUTE)
+            207 -> doILL(M_IMPLIED)
+            208 -> doBNE(M_RELATIVE)
+            209 -> doCMP(M_INDIRECT_Y)
+            210 -> doCMP(M_INDIRECT_ZP)
+            211 -> doILL(M_IMPLIED)
+            212 -> doILL(M_IMPLIED)
+            213 -> doCMP(M_ZERO_PAGE_X)
+            214 -> doDEC(M_ZERO_PAGE_X)
+            215 -> doILL(M_IMPLIED)
+            216 -> doCLD(M_IMPLIED)
+            217 -> doCMP(M_ABSOLUTE_Y)
+            218 -> doPHX(M_IMPLIED)
+            219 -> doILL(M_IMPLIED)
+            220 -> doILL(M_IMPLIED)
+            221 -> doCMP(M_ABSOLUTE_X)
+            222 -> doDEC(M_ABSOLUTE_X)
+            223 -> doILL(M_IMPLIED)
+            224 -> doCPX(M_IMMEDIATE)
+            225 -> doSBC(M_INDIRECT_X)
+            226 -> doILL(M_IMPLIED)
+            227 -> doILL(M_IMPLIED)
+            228 -> doCPX(M_ZERO_PAGE)
+            229 -> doSBC(M_ZERO_PAGE)
+            230 -> doINC(M_ZERO_PAGE)
+            231 -> doILL(M_IMPLIED)
+            232 -> doINX(M_IMPLIED)
+            233 -> doSBC(M_IMMEDIATE)
+            234 -> doNOP(M_IMPLIED)
+            235 -> doILL(M_IMPLIED)
+            236 -> doCPX(M_ABSOLUTE)
+            237 -> doSBC(M_ABSOLUTE)
+            238 -> doINC(M_ABSOLUTE)
+            239 -> doILL(M_IMPLIED)
+            240 -> doBEQ(M_RELATIVE)
+            241 -> doSBC(M_INDIRECT_Y)
+            242 -> doSBC(M_INDIRECT_ZP)
+            243 -> doILL(M_IMPLIED)
+            244 -> doILL(M_IMPLIED)
+            245 -> doSBC(M_ZERO_PAGE_X)
+            246 -> doINC(M_ZERO_PAGE_X)
+            247 -> doILL(M_IMPLIED)
+            248 -> doSED(M_IMPLIED)
+            249 -> doSBC(M_ABSOLUTE_Y)
+            250 -> doPLX(M_IMPLIED)
+            251 -> doILL(M_IMPLIED)
+            252 -> doILL(M_IMPLIED)
+            253 -> doSBC(M_ABSOLUTE_X)
+            254 -> doINC(M_ABSOLUTE_X)
+            255 -> doILL(M_IMPLIED)
         }
     }
 
@@ -949,14 +1470,14 @@ class M6502(private val mem: Memory, var pc: Int) {
     }
 
     private fun dumpFlags(b: StringBuilder) {
-        b.append(if ((flags and nFlag) == 0) " n" else " N")
-        b.append(if ((flags and vFlag) == 0) 'v' else 'V')
-        b.append(if ((flags and rFlag) == 0) 'r' else 'R')
-        b.append(if ((flags and bFlag) == 0) 'b' else 'B')
-        b.append(if ((flags and dFlag) == 0) 'd' else 'D')
-        b.append(if ((flags and iFlag) == 0) 'i' else 'I')
-        b.append(if ((flags and zFlag) == 0) 'z' else 'Z')
-        b.append(if ((flags and cFlag) == 0) 'c' else 'C')
+        b.append(if ((flags and N_FLAG) == 0) " n" else " N")
+        b.append(if ((flags and V_FLAG) == 0) 'v' else 'V')
+        b.append(if ((flags and R_FLAG) == 0) 'r' else 'R')
+        b.append(if ((flags and B_FLAG) == 0) 'b' else 'B')
+        b.append(if ((flags and D_FLAG) == 0) 'd' else 'D')
+        b.append(if ((flags and I_FLAG) == 0) 'i' else 'I')
+        b.append(if ((flags and Z_FLAG) == 0) 'z' else 'Z')
+        b.append(if ((flags and C_FLAG) == 0) 'c' else 'C')
         b.append(' ')
     }
 
@@ -966,67 +1487,85 @@ class M6502(private val mem: Memory, var pc: Int) {
         b.append(mneumonics[opcode])
 
         when (modeTable[opcode]) {
-            mIndirectX -> {
+            M_INDIRECT_X -> {
                 b.append(" (")
                 dumpHexByte(b, mem.read(where + 1))
                 b.append(", X)")
             }
-            mZeroPage -> {
+
+            M_ZERO_PAGE -> {
                 b.append(' ')
                 dumpHexByte(b, mem.read(where + 1))
             }
-            mImmediate -> {
+
+            M_IMMEDIATE -> {
                 b.append(" #")
                 dumpHexByte(b, mem.read(where + 1))
             }
-            mAbsolute -> {
+
+            M_ABSOLUTE -> {
                 b.append(' ')
                 dumpHexWord(b, wordAt(where + 1))
             }
-            mIndirectY -> {
+
+            M_INDIRECT_Y -> {
                 b.append(" (")
                 dumpHexByte(b, mem.read(where + 1))
                 b.append("), Y  [")
                 dumpHexWord(b, wordAt(mem.read(where + 1)))
                 b.append(']')
             }
-            mZeroPageX -> {
+
+            M_ZERO_PAGE_X -> {
                 b.append(' ')
                 dumpHexByte(b, mem.read(where + 1))
                 b.append(", X")
             }
-            mZeroPageY -> {
+
+            M_ZERO_PAGE_Y -> {
                 b.append(' ')
                 dumpHexByte(b, mem.read(where + 1))
                 b.append(", Y")
             }
-            mAbsoluteX -> {
+
+            M_ABSOLUTE_X -> {
                 b.append(' ')
                 dumpHexWord(b, wordAt(where + 1))
                 b.append(", X")
             }
-            mAbsoluteY -> {
+
+            M_ABSOLUTE_Y -> {
                 b.append(' ')
                 dumpHexWord(b, wordAt(where + 1))
                 b.append(", Y")
             }
-            mRelative -> {
+
+            M_RELATIVE -> {
                 b.append(' ')
                 dumpHexWord(b, where + 2 + complement(mem.read(where + 1)))
             }
-            mIndirect -> {
+
+            M_INDIRECT -> {
                 b.append(" (")
                 dumpHexWord(b, wordAt(where + 1))
                 b.append(')')
             }
-            mIndirectZP -> {
+
+            M_INDIRECT_ZP -> {
                 b.append(" (")
                 dumpHexByte(b, mem.read(where + 1))
                 b.append(')')
             }
-            mAccum -> b.append(" A")
-            mImplied -> {}
-            else -> b.append(" UNKNOWN MODE")
+
+            M_ACCUM -> {
+                b.append(" A")
+            }
+
+            M_IMPLIED -> {}
+
+            else -> {
+                b.append(" UNKNOWN MODE")
+            }
         }
         return b.toString()
     }

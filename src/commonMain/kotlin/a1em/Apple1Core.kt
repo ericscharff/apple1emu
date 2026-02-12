@@ -2,15 +2,18 @@ package a1em
 
 interface Apple1IO {
     fun onOutput(char: Char)
+
     fun warn(message: String)
+
     fun error(message: String)
 }
 
-class Apple1Core(val io: Apple1IO) : M6502.Memory {
-
+class Apple1Core(
+    val io: Apple1IO,
+) : M6502.Memory {
     private val mem = IntArray(65536)
     val cpu = M6502(this, 0xff00)
-    
+
     var lastKey: Int = 0
     private var lastOut: Int = 0
     private var keyBuf: CharArray? = null
@@ -25,21 +28,28 @@ class Apple1Core(val io: Apple1IO) : M6502.Memory {
     }
 
     fun fillKeyBuf(content: String) {
-        keyBuf = CharArray(content.length) { i ->
-            val it = content[i]
-            if (it == '\n') '\r' else it
-        }
+        keyBuf =
+            CharArray(content.length) { i ->
+                val it = content[i]
+                if (it == '\n') '\r' else it
+            }
         keyBufIndex = 0
     }
 
-    fun loadBinary(data: ByteArray, where: Int) {
+    fun loadBinary(
+        data: ByteArray,
+        where: Int,
+    ) {
         var addr = where
         for (b in data) {
             mem[addr++] = b.toInt() and 0xff
         }
     }
-    
-    fun loadBinary(data: IntArray, where: Int) {
+
+    fun loadBinary(
+        data: IntArray,
+        where: Int,
+    ) {
         var addr = where
         for (b in data) {
             mem[addr++] = b
@@ -59,10 +69,10 @@ class Apple1Core(val io: Apple1IO) : M6502.Memory {
     }
 
     // Read
-    private fun doIORead(where: Int): Int {
-        return when (where) {
+    private fun doIORead(where: Int): Int =
+        when (where) {
             0xd010 -> {
-                /* Keyboard input */
+                // Keyboard input
                 var k = lastKey
                 val buf = keyBuf
                 if (buf != null) {
@@ -82,6 +92,7 @@ class Apple1Core(val io: Apple1IO) : M6502.Memory {
                 lastKey = 0
                 k or 0x80
             }
+
             0xd011 -> {
                 if (keyBuf == null && lastKey == 0) {
                     1
@@ -89,38 +100,55 @@ class Apple1Core(val io: Apple1IO) : M6502.Memory {
                     0x80
                 }
             }
+
             0xd0f2, 0xd012 -> {
-                /* Display output */
-                /* bit 8 should always be low */
+                // Display output
+                // bit 8 should always be low
                 lastOut and 0x7f
             }
+
             0xd013 -> {
-                /* Display status */
+                // Display status
                 io.warn("Read from display status")
                 0
             }
+
             else -> {
                 io.error("Read from Unknown I/O Address: $where")
                 0
             }
         }
-    }
 
     // Write
-    private fun doIOWrite(where: Int, what: Int) {
+    private fun doIOWrite(
+        where: Int,
+        what: Int,
+    ) {
         val addr = (where and 0xf00f) or 0x0010
         when (addr) {
-            0xd010 -> io.warn("Write to keyboard I/O: $what")
-            0xd011 -> io.warn("Write to keyboard status I/O: $what")
+            0xd010 -> {
+                io.warn("Write to keyboard I/O: $what")
+            }
+
+            0xd011 -> {
+                io.warn("Write to keyboard status I/O: $what")
+            }
+
             0xd0f2, 0xd012 -> {
-                /* Display output */
+                // Display output
                 var ch = (what and 0x7f).toChar()
                 if (ch == '\r') ch = '\n'
                 io.onOutput(ch)
                 lastOut = what
             }
-            0xd013 -> io.warn("Write to display status I/O: $what")
-            else -> io.error("Write to Unknown I/O Address: $where")
+
+            0xd013 -> {
+                io.warn("Write to display status I/O: $what")
+            }
+
+            else -> {
+                io.error("Write to Unknown I/O Address: $where")
+            }
         }
     }
 
@@ -136,7 +164,10 @@ class Apple1Core(val io: Apple1IO) : M6502.Memory {
         return mem[where]
     }
 
-    override fun write(where: Int, what: Int) {
+    override fun write(
+        where: Int,
+        what: Int,
+    ) {
         if (where == 0 || where == 1) {
             io.warn("Write to $where")
         }
@@ -156,5 +187,8 @@ class Apple1Core(val io: Apple1IO) : M6502.Memory {
     }
 
     fun getCoreCpu() = cpu
-    fun setCoreLastKey(v: Int) { lastKey = v }
+
+    fun setCoreLastKey(v: Int) {
+        lastKey = v
+    }
 }

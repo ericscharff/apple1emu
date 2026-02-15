@@ -1,0 +1,23 @@
+plugins {
+  id 'application'
+}
+
+repositories {
+  mavenCentral()
+}
+
+application {
+  mainClass = 'a1em.Apple1'
+}
+
+dependencies {
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    events "passed", "skipped", "failed"
+  }
+}

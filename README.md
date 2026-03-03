@@ -132,10 +132,3 @@ compiler, so my
 [oberon-compiler](https://github.com/ericscharff/oberon-compiler) repository has
 an Apple I emulator that uses the console without any Java GUI hacks, and
 compiles to a native platform binary.
-
-## Native Executable with Kotlin
-In the `kotlin` directory of this repository is a highly experimental and
-unsupported port of the Apple 1 emulator to Kotlin. More specifically, the
-Kotlin code is Kotlin native, so it has no Java dependencies. The end result
-is Kotlin code that can be compiled to a native Linux binary, so it can run
-without a JRE installed.

@@ -663,24 +663,29 @@ public class M6502 {
   }
 
   private void doPHX(int mode) {
+    // Note - this instruction is only in the 65C02
     pushByte(x);
   }
 
   private void doPHY(int mode) {
+    // Note - this instruction is only in the 65C02
     pushByte(y);
   }
 
   private void doPLX(int mode) {
+    // Note - this instruction is only in the 65C02
     x = popByte();
     setNZ(x);
   }
 
   private void doPLY(int mode) {
+    // Note - this instruction is only in the 65C02
     y = popByte();
     setNZ(y);
   }
 
   private void doSTZ(int mode) {
+    // Note - this instruction is only in the 65C02
     mem.write(ea(mode), 0);
   }
 
